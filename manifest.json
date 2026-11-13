@@ -1,0 +1,19 @@
+{
+  "name": "OAPU - Organizador Académico Personal Universitario",
+  "short_name": "OAPU",
+  "description": "Organizador de malla curricular, horarios por módulos y calculador de notas universitario.",
+  "start_url": "/oapu/index.html",
+  "scope": "/oapu/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#090d16",
+  "theme_color": "#090d16",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
