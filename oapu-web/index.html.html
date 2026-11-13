@@ -1,0 +1,2692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OAPU - Organizador Académico Personal Universitario</title>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #131b26;
+      --border: #222f3e;
+      --text: #c8d6e5;
+      --text-muted: #8395a7;
+      --text-white: #ffffff;
+      --accent: #22C55E;
+      --accent-hover: #16A34A;
+      --enrolled: #319795;
+      --enrolled-hover: #2C7A7B;
+      --prereq: #E08E45;
+      --unlocks: #319795;
+      --tab-bg: #0f172a;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --warning: #D69E2E;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    header {
+      padding: 1rem 1.5rem;
+      background: rgba(9, 13, 22, 0.95);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+    .header-left h1 { font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .header-left h1 span { color: var(--accent); }
+    .header-left p { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+    
+    .header-right { display: flex; align-items: center; gap: 1rem; }
+    .progress-bar-container {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 0.45rem 0.9rem;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      min-width: 230px;
+    }
+    .pb-info { display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 700; color: #fff; }
+    .pb-track { height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden; }
+    .pb-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.4s ease; }
+    .pb-text { text-align: right; margin-top: 4px; color: var(--text-muted); font-size: 0.7rem; font-weight: 600; }
+
+    /* TABS NAV */
+    .tabs-nav {
+      display: flex;
+      background: var(--tab-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 0 1.5rem;
+      gap: 0.5rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 1rem 1.2rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.04); }
+    .tab-btn.active {
+      color: var(--accent);
+      border-bottom: 3px solid var(--accent);
+      background: rgba(34, 197, 94, 0.06);
+    }
+    .tab-content { display: none; padding: 1.5rem; flex: 1; animation: fadeIn 0.25s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* BUTTONS & INPUTS */
+    .btn {
+      background: #1e293b;
+      color: #fff;
+      border: 1px solid #334155;
+      padding: 0.6rem 1.15rem;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: center;
+      font-family: inherit;
+    }
+    .btn:hover { background: #334155; border-color: #475569; }
+    .btn-accent { background: var(--accent); border-color: var(--accent); color: #052e16; }
+    .btn-accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: #fff; }
+    .btn-enrolled { background: #38B2AC; border-color: #38B2AC; color: #090d16; }
+    .btn-enrolled:hover { background: #319795; border-color: #319795; color: #fff; }
+    .btn-enrolled.active { background: var(--accent); border-color: var(--accent); color: #052e16; }
+    .btn-danger { background: #1e293b; color: var(--danger); border-color: rgba(239, 68, 68, 0.4); }
+    .btn-danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+    .history-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #0f172a;
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+    .history-info { font-size: 0.75rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-right: 0.3rem; }
+    .btn-icon-hist {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    .btn-icon-hist:hover:not(:disabled) { background: #38B2AC; color: #000; border-color: #38B2AC; }
+    .btn-icon-hist:disabled { opacity: 0.3; cursor: not-allowed; background: transparent; border-color: transparent; }
+    
+    .form-control {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #fff;
+      padding: 0.68rem 0.85rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus { border-color: #38B2AC; }
+
+    /* =========================================
+       TAB 1: MALLA CURRICULAR
+       ========================================= */
+    .malla-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .malla-tools-left { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+    .malla-search { width: 260px; }
+
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      background: #111827;
+      border: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      margin-bottom: 0.85rem;
+    }
+    .stats-pills { display: flex; gap: 0.75rem; flex-wrap: wrap; font-size: 0.82rem; }
+    .stat-pill {
+      background: #1f2937;
+      border: 1px solid #374151;
+      padding: 4px 12px;
+      border-radius: 6px;
+      color: #d1d5db;
+      font-weight: 600;
+    }
+
+    .legend {
+      display: flex;
+      gap: 1.1rem;
+      flex-wrap: wrap;
+      font-size: 0.76rem;
+      color: #d1d5db;
+      font-weight: 600;
+      align-items: center;
+    }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-swatch {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+    }
+    .legend-chk {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #22C55E;
+      color: #052e16;
+      font-size: 0.65rem;
+      font-weight: 900;
+    }
+
+    .cat-legend {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 0.85rem;
+      padding: 0.6rem 1rem;
+      background: #111827;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .cat-legend-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #9ca3af;
+      margin-right: 0.3rem;
+    }
+    .cat-legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: #f3f4f6;
+      background: #1f2937;
+      border: 1px solid #374151;
+    }
+    .cat-legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    .cat-legend-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: #9ca3af;
+    }
+
+    .hl-info {
+      font-size: 0.82rem;
+      color: #d1d5db;
+      background: #111827;
+      border: 1px solid var(--border);
+      padding: 0.6rem 1rem;
+      border-radius: 8px;
+      margin-bottom: 0.9rem;
+      min-height: 2.4rem;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      line-height: 1.5;
+    }
+
+    /* Padding amplio para que el resplandor exterior y scale(1.03) en hover jamás se recorten */
+    .malla-container {
+      display: flex;
+      gap: 1.15rem;
+      overflow-x: auto;
+      padding: 14px 12px 2.2rem 12px;
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+    }
+    .semester-col { min-width: 208px; width: 208px; display: flex; flex-direction: column; gap: 0.9rem; flex-shrink: 0; }
+    @media (max-width: 768px) { .semester-col { min-width: 82vw; } }
+
+    .semester-header {
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 0.65rem;
+      text-align: center;
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: #f9fafb;
+    }
+    .semester-header .credits { font-size: 0.72rem; color: #9ca3af; font-weight: 600; margin-top: 3px; }
+
+    /* TARJETA DE CURSO EN 3 FRANJAS HORIZONTALES */
+    .course-card {
+      background: #111827;
+      border-radius: 9px;
+      border: 1px solid #374151;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      position: relative;
+      user-select: none;
+      min-height: 112px;
+      transition: all 0.18s ease;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+    }
+
+    .course-top {
+      background: #111827;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.38rem 0.6rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #9ca3af;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      min-height: 28px;
+    }
+    .course-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      letter-spacing: -0.2px;
+    }
+    .top-r {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .chk-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #22C55E;
+      color: #052e16;
+      flex-shrink: 0;
+    }
+    .chk-badge svg {
+      width: 11px;
+      height: 11px;
+      stroke: #052e16;
+      stroke-width: 3.2;
+      fill: none;
+    }
+    .enr-badge {
+      background: #38B2AC;
+      color: #090d16;
+      font-size: 0.54rem;
+      font-weight: 800;
+      padding: 1px 5px;
+      border-radius: 4px;
+      letter-spacing: 0.2px;
+    }
+    .card-edit {
+      background: transparent;
+      border: none;
+      color: #6b7280;
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 0 2px;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    .card-edit:hover { color: #f9fafb; }
+
+    .course-body {
+      padding: 0.72rem 0.6rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-align: center;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.32;
+      word-break: break-word;
+      transition: all 0.18s ease;
+    }
+
+    .course-bottom {
+      background: #111827;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.36rem 0.6rem;
+      font-size: 0.66rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .req-badge {
+      background: #1f2937;
+      color: #9ca3af;
+      padding: 1px 7px;
+      border-radius: 8px;
+      font-size: 0.63rem;
+      font-weight: 700;
+    }
+    .cr-badge { color: #d1d5db; font-weight: 700; }
+
+    /* =====================================================
+       1. ESTADOS PERMANENTES DE UN CURSO (BASE)
+       ===================================================== */
+    /* Estado 1: Bloqueado (Gris oscuro apagado) */
+    .course-card.state-locked {
+      border: 1px solid #1f2937;
+    }
+    .course-card.state-locked .course-body {
+      background-color: #262B36;
+      color: #9CA3AF;
+    }
+
+    /* Estado 2: Habilitado Normal (Color de categoría con saturación/brillo moderado, borde oscuro normal y sin resplandor) */
+    .course-card.state-enabled {
+      border: 1px solid #374151;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+    }
+    .course-card.state-enabled .course-body {
+      background-color: var(--cat-soft, #319795);
+      color: #F3F4F6;
+      filter: brightness(0.92) saturate(0.95);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Estado 3: Aprobado (Verde oscuro elegante con borde verde definido) */
+    .course-card.state-approved {
+      border: 1.5px solid #22C55E;
+    }
+    .course-card.state-approved .course-body {
+      background: linear-gradient(180deg, #15803D 0%, #1B4332 100%);
+      color: #FFFFFF;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Curso Matriculado (En curso) */
+    .course-card.enrolled {
+      border: 1.5px solid #38B2AC;
+    }
+
+    .course-card.hidden-search { display: none !important; }
+    .course-card.filter-locked-hide { opacity: 0.3; }
+
+    /* =====================================================
+       2 y 3. ESTADO DE ALTO BRILLO EN HOVER (.hover-highlight)
+       Destaca con fuerza el curso actual, sus prerrequisitos
+       (incluyendo cursos ya aprobados) y los cursos que habilita
+       ===================================================== */
+    .course-card.hover-highlight {
+      color: var(--cat-soft, #FDE047);
+      border: 2.5px solid #FFFFFF !important;
+      box-shadow: 0 0 18px 4px rgba(255, 255, 255, 0.45), 0 0 8px 2px currentColor !important;
+      transform: translateY(-3px) scale(1.03) !important;
+      z-index: 20 !important;
+      transition: all 0.18s ease !important;
+    }
+    .course-card.hover-highlight .course-body {
+      background: var(--cat-soft, #319795) !important;
+      color: #FFFFFF !important;
+      filter: brightness(1.35) saturate(1.25) !important;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.65) !important;
+    }
+    .course-card.hover-highlight .course-code {
+      color: #FFFFFF;
+    }
+
+    /* =====================================================
+       TAB 2: HORARIO UNIVERSITARIO DE 17 MÓDULOS
+       ===================================================== */
+    .horario-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .horario-title-group h2 {
+      font-size: 1.35rem;
+      color: #fff;
+      font-weight: 800;
+    }
+    .horario-title-group p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .horario-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .schedule-status-strip {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.2rem;
+    }
+    .status-badge-card {
+      background: #131b26;
+      border: 1px solid #263548;
+      border-left: 4px solid #64748b;
+      border-radius: 10px;
+      padding: 0.65rem 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: transform 0.15s ease, background 0.15s ease;
+    }
+    .status-badge-card:hover {
+      background: #192332;
+      transform: translateY(-1px);
+    }
+    .sbc-left {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #f1f5f9;
+    }
+    .sbc-icon {
+      font-size: 1rem;
+      line-height: 1;
+    }
+    .sbc-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.06);
+      color: #e2e8f0;
+    }
+    .sbc-inscrito { border-left-color: #22C55E; }
+    .sbc-inscrito .sbc-count { color: #4ade80; background: rgba(34, 197, 94, 0.12); }
+
+    .sbc-preinscrito { border-left-color: #F59E0B; }
+    .sbc-preinscrito .sbc-count { color: #fbbf24; background: rgba(245, 158, 11, 0.12); }
+
+    .sbc-sinhorario { border-left-color: #63B3ED; cursor: pointer; }
+    .sbc-sinhorario .sbc-count { color: #90cdf4; background: rgba(99, 179, 237, 0.12); }
+
+    .sbc-cruce { border-left-color: #EF4444; }
+    .sbc-cruce .sbc-count { color: #f87171; background: rgba(239, 68, 68, 0.15); }
+    .sbc-cruce.has-conflict {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.5);
+      border-left: 4px solid #EF4444;
+    }
+
+    .sbc-feriado { border-left-color: #EC4899; }
+    .sbc-feriado .sbc-count { color: #f472b6; background: rgba(236, 72, 153, 0.12); }
+
+    .sbc-recuperacion { border-left-color: #38B2AC; }
+    .sbc-recuperacion .sbc-count { color: #4fd1c5; background: rgba(56, 178, 172, 0.12); }
+
+    .schedule-table-wrapper {
+      background: #111827;
+      border: 1px solid #263548;
+      border-radius: 12px;
+      overflow-x: auto;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+      margin-bottom: 1.5rem;
+    }
+    .schedule-table {
+      width: 100%;
+      min-width: 1020px;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .schedule-table thead th {
+      background: #1a2436;
+      color: #f8fafc;
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0.75rem 0.5rem;
+      border-bottom: 2px solid #2d3d54;
+      border-right: 1px solid #243247;
+      text-align: center;
+    }
+    .schedule-table thead th:last-child { border-right: none; }
+    .schedule-table th.col-mod { width: 78px; }
+    .schedule-table th.col-time { width: 118px; }
+
+    .schedule-table tbody tr {
+      border-bottom: 1px solid #1e293b;
+      transition: background 0.12s ease;
+    }
+    .schedule-table tbody tr:nth-child(even) {
+      background: rgba(15, 23, 42, 0.45);
+    }
+    .schedule-table tbody tr:hover {
+      background: rgba(30, 41, 59, 0.45);
+    }
+    .schedule-table td {
+      border-right: 1px solid #1e293b;
+      padding: 4px;
+      vertical-align: top;
+      height: 54px;
+    }
+    .schedule-table td:last-child { border-right: none; }
+
+    .td-mod {
+      text-align: center;
+      vertical-align: middle !important;
+      font-weight: 800;
+      font-size: 0.76rem;
+      color: #94a3b8;
+      background: rgba(15, 23, 42, 0.7);
+    }
+    .mod-pill {
+      display: inline-block;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+    .td-time {
+      text-align: center;
+      vertical-align: middle !important;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      background: rgba(15, 23, 42, 0.5);
+      white-space: nowrap;
+    }
+
+    .td-slot {
+      position: relative;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .td-slot:hover {
+      background: rgba(56, 178, 172, 0.07);
+    }
+    .td-slot-empty-hint {
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      font-size: 0.72rem;
+      font-weight: 700;
+      transition: opacity 0.15s ease;
+    }
+    .td-slot:hover .td-slot-empty-hint {
+      opacity: 1;
+    }
+
+    .slot-events-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      height: 100%;
+    }
+    .class-block {
+      background: var(--blk-bg, rgba(34, 197, 94, 0.14));
+      border: 1px solid var(--blk-border, rgba(34, 197, 94, 0.35));
+      border-left: 4px solid var(--blk-color, #22C55E);
+      border-radius: 6px;
+      padding: 5px 7px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 2px;
+      min-height: 44px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .class-block:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+      z-index: 5;
+    }
+    .class-block.is-conflict {
+      background: rgba(239, 68, 68, 0.18) !important;
+      border-color: #EF4444 !important;
+      border-left: 4px solid #EF4444 !important;
+    }
+    .cb-line1 {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.63rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      padding-right: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .cb-line2 {
+      font-size: 0.71rem;
+      font-weight: 800;
+      color: #ffffff;
+      text-transform: uppercase;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+    .cb-line3 {
+      font-size: 0.64rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      opacity: 0.9;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+    .cb-conflict-tag {
+      color: #fca5a5;
+      font-weight: 800;
+      font-size: 0.6rem;
+    }
+    .cb-delete {
+      position: absolute;
+      top: 3px;
+      right: 4px;
+      background: transparent;
+      border: none;
+      color: #cbd5e1;
+      cursor: pointer;
+      font-size: 0.85rem;
+      line-height: 1;
+      opacity: 0.55;
+      padding: 1px 3px;
+      border-radius: 4px;
+    }
+    .cb-delete:hover {
+      opacity: 1;
+      color: #ef4444;
+      background: rgba(0,0,0,0.3);
+    }
+
+    .deadlines-section {
+      background: #111827;
+      border: 1px solid #263548;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+    }
+    .dl-header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #1e293b;
+    }
+    .dl-header-bar h3 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .dl-grid-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 0.9rem;
+    }
+    .dl-card {
+      background: #1a2436;
+      padding: 0.85rem 1rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--prereq);
+      position: relative;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .dl-card h4 { font-size: 0.86rem; color: #fff; margin-bottom: 5px; padding-right: 20px; word-break: break-word; }
+    .dl-card .date { font-size: 0.75rem; color: var(--accent); font-weight: 700; }
+    .dl-card .type { font-size: 0.65rem; background: #0f172a; color: #cbd5e1; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-top: 6px; font-weight: 600; }
+    .dl-card.urgent { border-left-color: var(--danger); }
+    .dl-card.urgent .date { color: var(--danger); }
+    .event-delete { position: absolute; top: 6px; right: 8px; background: transparent; border: none; color: var(--danger); cursor: pointer; font-size: 1rem; opacity: 0.65; padding: 2px; }
+    .event-delete:hover { opacity: 1; }
+
+    /* =========================================
+       TAB 3: CALCULADOR DE NOTAS
+       ========================================= */
+    .notas-header { background: linear-gradient(135deg, #131b26 0%, #0f172a 100%); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .notas-header h2 { font-size: 1.4rem; color: #fff; display: flex; align-items: center; gap: 0.5rem; }
+    .ppa-box { background: rgba(56, 178, 172, 0.1); border: 1px solid #38B2AC; padding: 0.8rem 1.5rem; border-radius: 8px; text-align: center; }
+    .ppa-box .lbl { font-size: 0.75rem; color: #cbd5e1; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .ppa-box .val { font-size: 1.8rem; font-weight: 800; color: #4FD1C5; margin-top: 4px; }
+    
+    .grades-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(380px, 100%), 1fr)); gap: 1.5rem; }
+    .course-grade-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+    .cgc-header { background: #1e293b; padding: 1rem 1.2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+    .cgc-header h3 { font-size: 0.95rem; color: #fff; font-weight: 800; }
+    .btn-icon-add { background: #38B2AC; color: #000; border: none; padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .btn-icon-add:hover { background: #319795; color: #fff; }
+    
+    .cgc-body { padding: 1.2rem; flex: 1; display: flex; flex-direction: column; }
+    .eval-row-header { display: grid; grid-template-columns: 2fr 1fr 1fr 30px; gap: 0.5rem; margin-bottom: 0.8rem; font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; padding: 0 4px; }
+    .eval-row { display: grid; grid-template-columns: 2fr 1fr 1fr 30px; gap: 0.5rem; margin-bottom: 0.6rem; align-items: center; }
+    .eval-input { background: #090d16; border: 1px solid #334155; color: #fff; padding: 0.5rem 0.6rem; border-radius: 6px; font-size: 0.85rem; width: 100%; font-family: inherit; font-weight: 500; }
+    .eval-input:focus { border-color: var(--accent); background: #0f172a; outline: none; }
+    
+    .btn-del-eval { background: transparent; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; opacity: 0.7; display: flex; justify-content: center; }
+    .btn-del-eval:hover { opacity: 1; }
+
+    .cgc-footer { border-top: 1px solid var(--border); padding-top: 1rem; margin-top: auto; display: flex; flex-direction: column; gap: 0.5rem; }
+    .summary-flex { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); padding: 0.8rem; border-radius: 8px; }
+    .summary-text { font-weight: 700; font-size: 0.85rem; color: var(--text-muted); }
+    .summary-text span { color: #fff; font-size: 1.3rem; font-weight: 800; margin-left: 8px; }
+    .sum-weight { font-size: 0.9rem; font-weight: 800; }
+    .sum-weight.ok { color: var(--accent); }
+    .sum-weight.warn { color: var(--danger); }
+    
+    .meta-text { font-size: 0.75rem; font-weight: 700; color: #F6E05E; background: rgba(214, 158, 46, 0.12); padding: 8px 10px; border-radius: 6px; border: 1px solid rgba(214, 158, 46, 0.3); margin-bottom: 0.5rem; }
+    .warning { color: var(--danger); font-size: 0.75rem; font-weight: 700; display: block; margin-top: 6px; text-align: right; }
+
+    .template-btns { display: flex; gap: 0.5rem; margin-bottom: 1.2rem; flex-wrap: wrap; }
+    .tpl-btn { background: #1e293b; border: 1px solid #334155; color: #cbd5e1; font-size: 0.7rem; font-weight: 600; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+    .tpl-btn:hover { background: #334155; color: #fff; }
+
+    .notes-panel { background: #090d16; padding: 1rem; border-top: 1px solid var(--border); display: none; }
+    .notes-panel.active { display: block; }
+    .notes-ta { width: 100%; height: 80px; background: transparent; border: 1px solid #334155; color: #fff; font-family: inherit; font-size: 0.8rem; padding: 0.6rem; resize: vertical; border-radius: 6px; outline: none; }
+    .notes-ta:focus { border-color: var(--accent); }
+
+    /* =========================================
+       TAB 4: CARGAR MALLA (SOLO JSON + BACKUP)
+       ========================================= */
+    .cfg-head { max-width: 1100px; margin: 0 auto 1.5rem; }
+    .cfg-head h2 { color: #fff; font-size: 1.45rem; font-weight: 800; margin-bottom: 0.4rem; }
+    .cfg-head p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; }
+
+    .dual-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      align-items: stretch;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .opt-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-width: 0;
+    }
+    .opt-step-1 { border-top: 4px solid #4A90E2; }
+    .opt-step-2 { border-top: 4px solid #38A169; }
+
+    .opt-badge {
+      align-self: flex-start;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      padding: 4px 11px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+    .opt-step-1 .opt-badge { background: rgba(74, 144, 226, 0.16); color: #63B3ED; }
+    .opt-step-2 .opt-badge { background: rgba(56, 161, 105, 0.16); color: #68D391; }
+
+    .opt-card h3 { color: #fff; font-size: 1.18rem; font-weight: 800; }
+    .opt-card p { color: var(--text-muted); font-size: 0.85rem; line-height: 1.55; }
+    .prompt-head { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; color: #fff; font-size: 0.85rem; font-weight: 700; }
+    .prompt-box {
+      flex: 1;
+      min-height: 240px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      line-height: 1.45;
+      color: #cbd5e1;
+      background: #090d16;
+      resize: vertical;
+    }
+    .json-box {
+      flex: 1;
+      min-height: 240px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.74rem;
+      line-height: 1.45;
+      color: #86efac;
+      background: #090d16;
+      resize: vertical;
+    }
+    .btn-row { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+    .config-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .config-card h3 { margin-bottom: 0.6rem; color: #fff; font-size: 1.1rem; font-weight: 800; }
+    .config-card p { font-size: 0.84rem; color: var(--text-muted); margin-bottom: 1.1rem; line-height: 1.45; }
+
+    @media (max-width: 900px) { .dual-grid { grid-template-columns: 1fr; } }
+
+    /* MODALES */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(5px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal {
+      background: var(--card-bg);
+      padding: 1.8rem;
+      border-radius: 12px;
+      width: 92%;
+      max-width: 480px;
+      border: 1px solid #334155;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+    .modal h3 { margin-bottom: 1.1rem; font-size: 1.2rem; color: #fff; font-weight: 800; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.8rem; margin-bottom: 0.4rem; color: #cbd5e1; font-weight: 700; }
+    
+    .checkbox-group { display: flex; gap: 0.45rem; flex-wrap: wrap; }
+    .day-chk { display: none; }
+    .day-lbl { background: #1e293b; padding: 0.48rem 0.78rem; border-radius: 6px; font-size: 0.82rem; cursor: pointer; border: 1px solid #334155; font-weight: 700; color: #94a3b8; transition: all 0.15s; }
+    .day-chk:checked + .day-lbl { background: #38B2AC; color: #090d16; border-color: #38B2AC; font-weight: 800; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.8rem; margin-top: 1.4rem; }
+
+    .ce-list { max-height: 220px; overflow-y: auto; border: 1px solid #334155; border-radius: 8px; padding: 0.4rem; background: #0f172a; }
+    .ce-item { display: flex; gap: 0.5rem; align-items: center; font-size: 0.8rem; padding: 0.35rem 0.5rem; border-radius: 6px; cursor: pointer; }
+    .ce-item:hover { background: #1e293b; }
+
+    .onboard {
+      width: 100%;
+      max-width: 680px;
+      margin: 1.5rem auto;
+      text-align: center;
+      background: var(--card-bg);
+      border: 2px dashed #475569;
+      border-radius: 14px;
+      padding: 2.5rem 1.5rem;
+    }
+    .onboard h2 { color: #fff; font-size: 1.4rem; margin-bottom: 0.8rem; }
+    .onboard p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1.5rem; }
+    .onboard-btns { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; }
+
+    /* TOAST */
+    #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .toast {
+      background: #1e293b;
+      color: #fff;
+      padding: 0.95rem 1.4rem;
+      border-radius: 8px;
+      border-left: 4px solid var(--accent);
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.4);
+      font-size: 0.88rem;
+      font-weight: 600;
+      animation: slideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      pointer-events: auto;
+    }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    @media (max-width: 768px) {
+      header { flex-direction: column; align-items: stretch; gap: 0.8rem; padding: 0.8rem 1rem; }
+      .progress-bar-container { min-width: 0; width: 100%; }
+      .tab-content { padding: 1rem; }
+      .grades-grid { grid-template-columns: 1fr; }
+      .malla-search { width: 100%; }
+      .eval-row, .eval-row-header { grid-template-columns: 1.6fr 1fr 1fr 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left">
+      <h1>OAPU <span>.</span></h1>
+      <p>Organizador Académico Personal Universitario</p>
+    </div>
+    <div class="header-right">
+      <div class="progress-bar-container">
+        <div class="pb-info">
+          <span>Avance de Carrera</span>
+          <span id="pb-pct">0%</span>
+        </div>
+        <div class="pb-track"><div class="pb-fill" id="pb-fill"></div></div>
+        <div class="pb-text" id="pb-text">0 / 0 CR</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" data-tab="tab-malla" onclick="app.switchTab('tab-malla')">📚 Malla Curricular</button>
+    <button class="tab-btn" data-tab="tab-horario" onclick="app.switchTab('tab-horario')">📅 Horario y Alertas</button>
+    <button class="tab-btn" data-tab="tab-notas" onclick="app.switchTab('tab-notas')">📊 Calculador de Notas</button>
+    <button class="tab-btn" data-tab="tab-config" onclick="app.switchTab('tab-config')">⚙️ Cargar Malla</button>
+  </div>
+
+  <!-- =========================================
+       TAB 1: MALLA CURRICULAR
+       ========================================= -->
+  <div id="tab-malla" class="tab-content active">
+    <div class="malla-toolbar">
+      <div class="malla-tools-left">
+        <input type="text" class="form-control malla-search" id="malla-search" placeholder="🔍 Buscar curso o código..." oninput="app.searchCourses()">
+        <button class="btn btn-enrolled" id="btn-enroll-mode" onclick="app.toggleEnrollMode()">✏️ Modo Matrícula</button>
+        <button class="btn" id="btn-eligible-mode" onclick="app.toggleEligible()">⚡ Solo Habilitados</button>
+      </div>
+      <div class="history-bar">
+        <span class="history-info">Malla</span>
+        <button class="btn-icon-hist" id="btn-undo-malla" onclick="app.undo()" title="Deshacer">↩️</button>
+        <button class="btn-icon-hist" id="btn-redo-malla" onclick="app.redo()" title="Rehacer">↪️</button>
+      </div>
+    </div>
+
+    <!-- BARRA DE ESTADOS Y LEYENDA -->
+    <div class="status-bar">
+      <div class="stats-pills">
+        <span class="stat-pill">Aprobados: <strong id="stat-appr" style="color:var(--accent)">0</strong></span>
+        <span class="stat-pill">Matriculados: <strong id="stat-enr" style="color:#4FD1C5">0</strong> / 24 CR</span>
+      </div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-chk">✔</span>Aprobado</span>
+        <span class="legend-item"><i class="legend-swatch" style="background:#38A169;"></i>Habilitado (Color de categoría)</span>
+        <span class="legend-item"><i class="legend-swatch" style="background:#262B36;"></i>Bloqueado (Gris oscuro)</span>
+        <span class="legend-item"><i class="legend-swatch" style="background:#E08E45; border:2px solid #FFFFFF; box-shadow:0 0 8px rgba(255,255,255,0.7);"></i>Conectado al cursor (Alto brillo)</span>
+      </div>
+    </div>
+
+    <!-- LEYENDA DE CATEGORÍAS DEL JSON -->
+    <div class="cat-legend" id="cat-legend"></div>
+
+    <!-- BARRA INFORMATIVA DE CONEXIONES EN HOVER -->
+    <div class="hl-info" id="hl-info">
+      💡 Pasa el cursor sobre cualquier curso para iluminar con alto brillo sus prerrequisitos y los cursos que desbloquea. Haz clic en un curso para marcarlo como Aprobado.
+    </div>
+
+    <!-- GRILLA DE CICLOS -->
+    <div class="malla-container" id="grid-malla"></div>
+  </div>
+
+  <!-- =========================================
+       TAB 2: HORARIO Y ALERTAS (17 MÓDULOS)
+       ========================================= -->
+  <div id="tab-horario" class="tab-content">
+    <div class="horario-top-bar">
+      <div class="horario-title-group">
+        <h2>Horario Universitario por Módulos</h2>
+        <p>Haz clic en cualquier celda vacía de la tabla o en el botón superior para asignar tus bloques de clase (50 min por módulo).</p>
+      </div>
+      <div class="horario-actions">
+        <button class="btn btn-enrolled" onclick="app.openScheduleModal()">+ Agregar Clase / Evento</button>
+        <div class="history-bar">
+          <span class="history-info">Horario</span>
+          <button class="btn-icon-hist" id="btn-undo-horario" onclick="app.undo()" title="Deshacer">↩️</button>
+          <button class="btn-icon-hist" id="btn-redo-horario" onclick="app.redo()" title="Rehacer">↪️</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BARRA SUPERIOR DE LEYENDA / ESTADOS -->
+    <div class="schedule-status-strip">
+      <div class="status-badge-card sbc-inscrito">
+        <div class="sbc-left"><span class="sbc-icon">☑</span><span>Curso Inscrito</span></div>
+        <span class="sbc-count" id="cnt-inscrito">0</span>
+      </div>
+      <div class="status-badge-card sbc-preinscrito">
+        <div class="sbc-left"><span class="sbc-icon">📝</span><span>Curso Preinscrito</span></div>
+        <span class="sbc-count" id="cnt-preinscrito">0</span>
+      </div>
+      <div class="status-badge-card sbc-sinhorario" onclick="app.showUnscheduledInfo()" title="Clic para ver cursos matriculados sin horario asignado">
+        <div class="sbc-left"><span class="sbc-icon">⏰</span><span>Sin Horario</span></div>
+        <span class="sbc-count" id="cnt-sinhorario">0</span>
+      </div>
+      <div class="status-badge-card sbc-cruce" id="card-cruce">
+        <div class="sbc-left"><span class="sbc-icon">🚫</span><span>Cruce</span></div>
+        <span class="sbc-count" id="cnt-cruce">0</span>
+      </div>
+      <div class="status-badge-card sbc-feriado">
+        <div class="sbc-left"><span class="sbc-icon">🏖️</span><span>Feriado</span></div>
+        <span class="sbc-count" id="cnt-feriado">0</span>
+      </div>
+      <div class="status-badge-card sbc-recuperacion">
+        <div class="sbc-left"><span class="sbc-icon">📅</span><span>Recuperaciones</span></div>
+        <span class="sbc-count" id="cnt-recuperacion">0</span>
+      </div>
+    </div>
+
+    <!-- TABLA DEL HORARIO DE 17 MÓDULOS -->
+    <div class="schedule-table-wrapper">
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th class="col-mod">Módulo</th>
+            <th class="col-time">Horario</th>
+            <th>Lunes</th>
+            <th>Martes</th>
+            <th>Miércoles</th>
+            <th>Jueves</th>
+            <th>Viernes</th>
+            <th>Sábado</th>
+            <th>Domingo</th>
+          </tr>
+        </thead>
+        <tbody id="schedule-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- PANEL INTEGRADO DE EXÁMENES Y ENTREGAS -->
+    <div class="deadlines-section">
+      <div class="dl-header-bar">
+        <div>
+          <h3>🔔 Exámenes y Entregas Programadas</h3>
+          <p style="font-size:0.76rem; color:var(--text-muted); margin-top:2px;">El sistema destaca en rojo las entregas que vencen en menos de 48 horas.</p>
+        </div>
+        <button class="btn btn-accent" onclick="app.openModal('deadline-modal')">+ Nueva Evaluación / Entrega</button>
+      </div>
+      <div class="dl-grid-list" id="dl-container"></div>
+    </div>
+  </div>
+
+  <!-- =========================================
+       TAB 3: CALCULADOR DE NOTAS
+       ========================================= -->
+  <div id="tab-notas" class="tab-content">
+    <div class="notas-header">
+      <div>
+        <h2>Calculador de Notas & Apuntes</h2>
+        <div style="display: flex; align-items: center; gap: 15px; margin-top:8px;">
+          <p style="font-size: 0.85rem; color: #94a3b8; font-weight: 500;">Gestiona los cursos marcados como EN CURSO.</p>
+          <div class="history-bar" style="padding: 0.2rem 0.5rem;">
+            <button class="btn-icon-hist" id="btn-undo-notas" onclick="app.undo()" style="padding: 0.1rem 0.5rem;">↩️</button>
+            <button class="btn-icon-hist" id="btn-redo-notas" onclick="app.redo()" style="padding: 0.1rem 0.5rem;">↪️</button>
+          </div>
+        </div>
+      </div>
+      <div class="ppa-box">
+        <div class="lbl">Promedio Ponderado Ciclo</div>
+        <div class="val" id="stat-ppa">--</div>
+      </div>
+    </div>
+    <div class="grades-grid" id="grades-container"></div>
+  </div>
+
+  <!-- =========================================
+       TAB 4: CARGAR MALLA (SOLO JSON + BACKUP)
+       ========================================= -->
+  <div id="tab-config" class="tab-content">
+    <div class="cfg-head">
+      <h2>🤖 Cargar Malla Curricular con IA (JSON)</h2>
+      <p>Importa tu malla curricular completa en 2 pasos: copia el prompt guía, envíaselo junto con tu documento o imagen de malla a ChatGPT, Gemini o Claude, y pega el código JSON resultante.</p>
+    </div>
+
+    <div class="dual-grid">
+      <!-- PASO 1 -->
+      <div class="opt-card opt-step-1">
+        <span class="opt-badge">PASO 1 · PROMPT PARA LA IA</span>
+        <h3>📋 Copiar Prompt Guía</h3>
+        <p>Copia este texto y envíalo junto con el archivo o captura de tu malla curricular a tu IA preferida para que genere el JSON estructurado con colores sólidos suaves por categoría.</p>
+        <div class="prompt-head">
+          <span>Prompt guía:</span>
+          <button class="btn btn-accent" onclick="app.copyPrompt()">📋 Copiar Prompt</button>
+        </div>
+        <textarea id="ia-prompt" class="form-control prompt-box" readonly>Eres un experto en estructuración de mallas curriculares universitarias. Te adjunto mi malla curricular (en PDF, imagen o texto). Conviértela íntegramente a formato JSON VÁLIDO y devuélvelo dentro de un único bloque de código, sin explicaciones.
+
+Estructura exacta requerida:
+{
+  "malla": {
+    "Ciclo I": [
+      { "name": "Cálculo I", "code": "MAT-101", "credits": 4, "cat": "CB", "req": [] }
+    ],
+    "Ciclo II": [
+      { "name": "Cálculo II", "code": "MAT-102", "credits": 4, "cat": "CB", "req": ["MAT-101"] }
+    ]
+  },
+  "colores": {
+    "CB": ["#4A90E2", "Ciencias Básicas"],
+    "ESP": ["#E08E45", "Especialidad"],
+    "GES": ["#38A169", "Gestión y Proyectos"],
+    "HUM": ["#805AD5", "Humanidades"]
+  }
+}
+
+Reglas estrictas:
+1. Crea una clave por cada ciclo en orden ("Ciclo I", "Ciclo II", ..., "Ciclo X").
+2. "code": código único por curso. Si la malla no trae códigos, créalos de forma consistente (ej. "CUR-101").
+3. "credits": número entero de créditos del curso.
+4. "req": lista con los CÓDIGOS ("code") de los prerrequisitos directos del curso. Usa [] si no tiene prerrequisitos.
+5. "cat": sigla corta del área o categoría (ej. "CB", "ESP", "GES", "HUM", "INV", "PRAC").
+6. En "colores", asigna a cada categoría una paleta de colores sólidos suaves y legibles (como "#E08E45", "#38A169", "#319795", "#4A90E2", "#805AD5", "#D69E2E").
+7. Verifica que absolutamente ningún curso ni ciclo del documento original quede fuera.</textarea>
+      </div>
+
+      <!-- PASO 2 -->
+      <div class="opt-card opt-step-2">
+        <span class="opt-badge">PASO 2 · APLICAR EN OAPU</span>
+        <h3>⚡ Pegar y Aplicar código JSON</h3>
+        <p>Pega aquí el bloque JSON que te devolvió la IA y pulsa en <b>Aplicar código JSON</b> para actualizar tu malla curricular.</p>
+        <div class="prompt-head">
+          <span>Código JSON:</span>
+          <button class="btn" onclick="app.resetToDefaultJSON()">🔄 Cargar ejemplo (UARM)</button>
+        </div>
+        <textarea id="json-editor" class="form-control json-box" placeholder='{
+  "malla": {
+    "Ciclo I": [ ... ]
+  },
+  "colores": {
+    "CB": ["#4A90E2", "Ciencias Básicas"]
+  }
+}'></textarea>
+        <div class="btn-row">
+          <button class="btn btn-enrolled" style="flex:1; padding: 0.75rem;" onclick="app.loadCustomJSON()">✅ Aplicar código JSON</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COPIA DE SEGURIDAD (BACKUP) -->
+    <div class="dual-grid" style="margin-top:1.5rem;">
+      <div class="config-card">
+        <h3>💾 Copia de seguridad (Backup)</h3>
+        <p>Todo se guarda automáticamente en el navegador (`localStorage`). Descarga un archivo de respaldo para conservar tu progreso, horarios y notas en otro dispositivo.</p>
+        <div class="btn-row">
+          <button class="btn btn-accent" onclick="app.exportBackup()">⬇️ Descargar Backup</button>
+          <button class="btn" onclick="document.getElementById('importFile').click()">⬆️ Subir Backup</button>
+          <input type="file" id="importFile" style="display:none" accept=".json" onchange="app.importBackup(event)">
+        </div>
+      </div>
+      <div class="config-card">
+        <h3>🧰 Más opciones</h3>
+        <p>Copia tu malla actual en formato JSON para compartirla, o borra todo el progreso guardado para empezar desde cero.</p>
+        <div class="btn-row">
+          <button class="btn" onclick="app.copyCurrentJSON()">📋 Copiar mi malla (JSON)</button>
+          <button class="btn btn-danger" onclick="app.hardReset()">🗑️ Borrar Todo el Progreso</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL AGREGAR CLASE / EVENTO POR MÓDULOS -->
+  <div class="modal-overlay" id="event-modal">
+    <div class="modal">
+      <h3>Agregar Clase o Evento al Horario</h3>
+      <div class="form-group">
+        <label>Elegir curso de la malla</label>
+        <select id="ev-course-select" class="form-control" onchange="app.handleCourseSelectChange(this)"></select>
+      </div>
+      <div style="display:flex; gap:0.8rem;">
+        <div class="form-group" style="flex:1.1;">
+          <label>Código y Sección</label>
+          <input type="text" id="ev-code-sec" class="form-control" placeholder="Ej. AUT-301 - 1">
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>Aula / Sala</label>
+          <input type="text" id="ev-room" class="form-control" placeholder="Ej. Sala F306">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Nombre del Curso o Evento</label>
+        <input type="text" id="ev-title" class="form-control" placeholder="Ej. AUTOMATIZACIÓN INDUSTRIAL">
+      </div>
+      <div class="form-group">
+        <label>Estado / Tipo de Bloque</label>
+        <select id="ev-status" class="form-control">
+          <option value="inscrito">☑ Curso Inscrito</option>
+          <option value="preinscrito">📝 Curso Preinscrito</option>
+          <option value="recuperacion">📅 Recuperación</option>
+          <option value="feriado">🏖️ Feriado</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Días de la semana</label>
+        <div class="checkbox-group">
+          <label><input type="checkbox" class="day-chk" value="Lunes"><span class="day-lbl">Lunes</span></label>
+          <label><input type="checkbox" class="day-chk" value="Martes"><span class="day-lbl">Martes</span></label>
+          <label><input type="checkbox" class="day-chk" value="Miércoles"><span class="day-lbl">Miérc.</span></label>
+          <label><input type="checkbox" class="day-chk" value="Jueves"><span class="day-lbl">Jueves</span></label>
+          <label><input type="checkbox" class="day-chk" value="Viernes"><span class="day-lbl">Viernes</span></label>
+          <label><input type="checkbox" class="day-chk" value="Sábado"><span class="day-lbl">Sábado</span></label>
+          <label><input type="checkbox" class="day-chk" value="Domingo"><span class="day-lbl">Dom.</span></label>
+        </div>
+      </div>
+      <div style="display:flex; gap:0.8rem;">
+        <div class="form-group" style="flex:1;">
+          <label>Módulo Inicio</label>
+          <select id="ev-mod-start" class="form-control" onchange="app.syncEndModule()"></select>
+        </div>
+        <div class="form-group" style="flex:1;">
+          <label>Módulo Fin</label>
+          <select id="ev-mod-end" class="form-control"></select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="app.closeModal('event-modal')">Cancelar</button>
+        <button class="btn btn-enrolled" onclick="app.saveEvent()">Guardar en Horario</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DEADLINES -->
+  <div class="modal-overlay" id="deadline-modal">
+    <div class="modal">
+      <h3>Nueva Evaluación o Entrega</h3>
+      <div class="form-group">
+        <label>Título</label>
+        <input type="text" id="dl-title" class="form-control" placeholder="Ej. Examen Parcial de Investigación Operativa">
+      </div>
+      <div class="form-group">
+        <label>Tipo</label>
+        <select id="dl-type" class="form-control">
+          <option value="Examen">Examen</option>
+          <option value="Tarea">Tarea</option>
+          <option value="Proyecto">Proyecto</option>
+          <option value="Exposición">Exposición</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fecha Límite</label><input type="date" id="dl-date" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Hora</label><input type="time" id="dl-time" class="form-control">
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="app.closeModal('deadline-modal')">Cancelar</button>
+        <button class="btn btn-accent" onclick="app.saveDeadline()">Programar Alerta</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL EDITAR CURSO -->
+  <div class="modal-overlay" id="course-modal">
+    <div class="modal">
+      <h3>Editar curso</h3>
+      <div class="form-group"><label>Nombre</label><input id="ce-name" class="form-control"></div>
+      <div style="display:flex; gap:1rem;">
+        <div class="form-group" style="flex:1.5"><label>Código</label><input id="ce-code" class="form-control"></div>
+        <div class="form-group" style="flex:1"><label>Categoría</label><input id="ce-cat" class="form-control" placeholder="ESP"></div>
+        <div class="form-group" style="flex:1"><label>Créditos</label><input id="ce-credits" type="number" min="0" max="15" class="form-control"></div>
+      </div>
+      <div class="form-group">
+        <label>Prerrequisitos (marca los cursos que lo habilitan)</label>
+        <input class="form-control" placeholder="🔍 Filtrar..." oninput="app.filterCe(this.value)" style="margin-bottom:.5rem">
+        <div class="ce-list" id="ce-req"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-danger" onclick="app.deleteCourse()" style="margin-right:auto;">Eliminar</button>
+        <button class="btn" onclick="app.closeModal('course-modal')">Cancelar</button>
+        <button class="btn btn-accent" onclick="app.saveCourse()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS -->
+  <div id="toast-container"></div>
+
+  <script>
+    // ==========================================
+    // DEFINICIÓN EXACTA DE LOS 17 MÓDULOS (50 MIN)
+    // ==========================================
+    const SCHEDULE_MODULES = [
+      { mod: 1,  time: "07:00 - 07:50", start: "07:00", end: "07:50" },
+      { mod: 2,  time: "07:50 - 08:40", start: "07:50", end: "08:40" },
+      { mod: 3,  time: "08:50 - 09:40", start: "08:50", end: "09:40" },
+      { mod: 4,  time: "09:40 - 10:30", start: "09:40", end: "10:30" },
+      { mod: 5,  time: "10:40 - 11:30", start: "10:40", end: "11:30" },
+      { mod: 6,  time: "11:30 - 12:20", start: "11:30", end: "12:20" },
+      { mod: 7,  time: "12:30 - 13:20", start: "12:30", end: "13:20" },
+      { mod: 8,  time: "13:20 - 14:10", start: "13:20", end: "14:10" },
+      { mod: 9,  time: "14:20 - 15:10", start: "14:20", end: "15:10" },
+      { mod: 10, time: "15:10 - 16:00", start: "15:10", end: "16:00" },
+      { mod: 11, time: "16:10 - 17:00", start: "16:10", end: "17:00" },
+      { mod: 12, time: "17:00 - 17:50", start: "17:00", end: "17:50" },
+      { mod: 13, time: "18:00 - 18:50", start: "18:00", end: "18:50" },
+      { mod: 14, time: "19:00 - 19:50", start: "19:00", end: "19:50" },
+      { mod: 15, time: "19:50 - 20:40", start: "19:50", end: "20:40" },
+      { mod: 16, time: "20:50 - 21:40", start: "20:50", end: "21:40" },
+      { mod: 17, time: "21:40 - 22:30", start: "21:40", end: "22:30" }
+    ];
+
+    const DAYS_LIST = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+
+    // ==========================================
+    // MALLA POR DEFECTO (UARM - ING. INDUSTRIAL)
+    // ==========================================
+    const defaultMalla = {
+      "Ciclo I": [
+        { name: "Ética y Ciudadanía", code: "ETI-101", credits: 3, cat: "HUM", req: [] },
+        { name: "Química I", code: "QUI-101", credits: 3, cat: "CB", req: [] },
+        { name: "Lengua I", code: "LEN-101", credits: 2, cat: "HUM", req: [] },
+        { name: "Historia Universal", code: "HIS-101", credits: 4, cat: "HUM", req: [] },
+        { name: "Comp. de Matemática", code: "MAT-101", credits: 4, cat: "CB", req: [] },
+        { name: "Dibujo de Ingeniería", code: "DIB-101", credits: 3, cat: "ESP", req: [] },
+        { name: "Tutoría I", code: "TUT-101", credits: 1, cat: "TUT", req: [] }
+      ],
+      "Ciclo II": [
+        { name: "Intro. Ing. Industrial", code: "IND-101", credits: 3, cat: "ESP", req: [] },
+        { name: "Lengua II", code: "LEN-102", credits: 2, cat: "HUM", req: ["LEN-101"] },
+        { name: "Teología", code: "TEO-101", credits: 4, cat: "HUM", req: [] },
+        { name: "Cálculo I", code: "MAT-102", credits: 4, cat: "CB", req: ["MAT-101"] },
+        { name: "Física I", code: "FIS-101", credits: 4, cat: "CB", req: ["MAT-101"] },
+        { name: "Química II", code: "QUI-102", credits: 3, cat: "CB", req: ["QUI-101"] },
+        { name: "Tutoría II", code: "TUT-102", credits: 1, cat: "TUT", req: [] }
+      ],
+      "Ciclo III": [
+        { name: "Antropología", code: "ANT-101", credits: 4, cat: "HUM", req: ["LEN-102"] },
+        { name: "Intro. a la Filosofía", code: "FIL-101", credits: 3, cat: "HUM", req: [] },
+        { name: "Cálculo II", code: "MAT-103", credits: 4, cat: "CB", req: ["MAT-102"] },
+        { name: "Estadística I", code: "EST-101", credits: 3, cat: "CB", req: ["MAT-102"] },
+        { name: "Física II", code: "FIS-102", credits: 4, cat: "CB", req: ["FIS-101", "MAT-102"] },
+        { name: "Tutoría III", code: "TUT-103", credits: 1, cat: "TUT", req: ["TUT-101"] }
+      ],
+      "Ciclo IV": [
+        { name: "Met. Trabajo Intelectual", code: "MET-101", credits: 3, cat: "HUM", req: ["ANT-101"] },
+        { name: "Ecología y Biodiv.", code: "ECO-101", credits: 3, cat: "ESP", req: [] },
+        { name: "Economía", code: "ECN-101", credits: 4, cat: "GES", req: ["MAT-101"] },
+        { name: "Estadística II", code: "EST-102", credits: 3, cat: "CB", req: ["EST-101", "MAT-103"] },
+        { name: "Cálculo III", code: "MAT-104", credits: 4, cat: "CB", req: ["MAT-103"] },
+        { name: "Física III", code: "FIS-103", credits: 4, cat: "CB", req: ["FIS-102", "MAT-103"] },
+        { name: "Tutoría IV", code: "TUT-104", credits: 1, cat: "TUT", req: ["TUT-101", "TUT-102"] }
+      ],
+      "Ciclo V": [
+        { name: "Ing. de Materiales", code: "MAT-201", credits: 3, cat: "ESP", req: ["QUI-102", "FIS-103"] },
+        { name: "Ing. de Métodos", code: "MET-201", credits: 4, cat: "ESP", req: ["EST-102"] },
+        { name: "Ing. Económica", code: "ECO-201", credits: 3, cat: "GES", req: ["ECN-101", "MAT-102"] },
+        { name: "Mecánica de Materiales", code: "MEC-201", credits: 4, cat: "ESP", req: ["FIS-102", "MAT-104"] },
+        { name: "Oper. y Proc. Unitarios", code: "OPU-201", credits: 3, cat: "ESP", req: ["QUI-102", "FIS-103"] },
+        { name: "Termodinámica", code: "TER-201", credits: 4, cat: "ESP", req: ["FIS-102", "QUI-102", "MAT-104"] },
+        { name: "Tutoría V", code: "TUT-105", credits: 1, cat: "TUT", req: ["TUT-102", "TUT-103"] }
+      ],
+      "Ciclo VI": [
+        { name: "Algoritmos y Progr.", code: "PRG-201", credits: 3, cat: "ESP", req: ["EST-102"] },
+        { name: "Diseño de Plantas", code: "DPI-201", credits: 4, cat: "ESP", req: ["MET-201", "OPU-201"] },
+        { name: "Instalaciones Ind.", code: "INS-201", credits: 3, cat: "ESP", req: ["OPU-201", "TER-201"] },
+        { name: "Inv. Operativa I", code: "INV-201", credits: 4, cat: "ESP", req: ["MAT-104", "MET-201", "OPU-201"] },
+        { name: "Marketing", code: "MKT-201", credits: 3, cat: "GES", req: ["ECO-201"] },
+        { name: "Prácticas Pre-Prof. I", code: "PPP-201", credits: 1, cat: "PRAC", req: ["OPU-201", "MET-201", "MAT-201"] },
+        { name: "Proc. Manufactura", code: "PMA-201", credits: 3, cat: "ESP", req: ["MEC-201", "MAT-201", "OPU-201"] },
+        { name: "Tutoría VI", code: "TUT-106", credits: 1, cat: "TUT", req: ["TUT-103", "TUT-104"] }
+      ],
+      "Ciclo VII": [
+        { name: "Automatización Ind.", code: "AUT-301", credits: 4, cat: "ESP", req: ["DPI-201", "INS-201"] },
+        { name: "Cadena de Suministro", code: "CAD-301", credits: 3, cat: "ESP", req: ["DPI-201", "INV-201", "MKT-201"] },
+        { name: "Inv. de Mercados", code: "INM-301", credits: 3, cat: "GES", req: ["EST-102", "MKT-201"] },
+        { name: "Control de Calidad", code: "CAL-301", credits: 3, cat: "ESP", req: ["OPU-201", "DPI-201"] },
+        { name: "Cont. Financiera", code: "CON-301", credits: 4, cat: "GES", req: ["ECO-201"] },
+        { name: "Inv. Operativa II", code: "INV-302", credits: 4, cat: "ESP", req: ["INV-201"] },
+        { name: "Tutoría VII", code: "TUT-107", credits: 1, cat: "TUT", req: ["TUT-104", "TUT-105"] }
+      ],
+      "Ciclo VIII": [
+        { name: "Contabilidad de Costos", code: "COS-301", credits: 3, cat: "GES", req: ["CON-301"] },
+        { name: "Adm. Recursos Humanos", code: "RRH-301", credits: 3, cat: "GES", req: ["CAD-301", "CAL-301"] },
+        { name: "Simulación de Sistemas", code: "SIM-301", credits: 4, cat: "ESP", req: ["INV-302"] },
+        { name: "Técnicas de Operaciones", code: "TOP-301", credits: 4, cat: "ESP", req: ["AUT-301", "CAD-301"] },
+        { name: "Análisis y Diseño Sist.", code: "ADS-301", credits: 4, cat: "ESP", req: ["PRG-201"] },
+        { name: "Creatividad e Innov.", code: "CRE-301", credits: 3, cat: "HUM", req: ["AUT-301", "INM-301"] },
+        { name: "Tutoría VIII", code: "TUT-108", credits: 1, cat: "TUT", req: ["TUT-105", "TUT-106"] }
+      ],
+      "Ciclo IX": [
+        { name: "Estrategia Operaciones", code: "EOP-401", credits: 4, cat: "ESP", req: ["TOP-301", "RRH-301"] },
+        { name: "Gestión Financiera", code: "GFI-401", credits: 4, cat: "GES", req: ["COS-301"] },
+        { name: "Form. y Eval. Proyectos", code: "FEP-401", credits: 4, cat: "GES", req: ["RRH-301", "ADS-301", "COS-301", "TOP-301"] },
+        { name: "Inv. de Innovaciones", code: "IIT-401", credits: 3, cat: "ESP", req: ["AUT-301", "CRE-301"] },
+        { name: "Práctica Pre-Prof. II", code: "PPP-402", credits: 1, cat: "PRAC", req: ["PPP-201", "TOP-301"] },
+        { name: "Impacto Ambiental", code: "EIA-401", credits: 3, cat: "ESP", req: ["TOP-301"] },
+        { name: "Seminario de Inv. I", code: "INV-401", credits: 3, cat: "INV", req: ["RRH-301", "ADS-301", "COS-301", "TOP-301", "CRE-301"] }
+      ],
+      "Ciclo X": [
+        { name: "Gestión de Proyectos", code: "GPR-401", credits: 3, cat: "GES", req: ["EOP-401", "GFI-401"] },
+        { name: "Planeamiento Estratégico", code: "PLE-401", credits: 3, cat: "GES", req: ["INM-301", "CON-301", "CAD-301"] },
+        { name: "Seminario de Inv. II", code: "INV-402", credits: 3, cat: "INV", req: ["INV-401", "EOP-401", "EIA-401", "GFI-401"] },
+        { name: "Ética Profesional", code: "ETI-401", credits: 3, cat: "HUM", req: ["INV-401"] },
+        { name: "Sistemas Integrados", code: "SIG-401", credits: 3, cat: "ESP", req: ["EIA-401", "CAL-301", "EOP-401"] }
+      ]
+    };
+
+    const defaultColors = {
+      "CB": ["#319795", "Ciencias Básicas"],
+      "ESP": ["#E08E45", "Especialidad"],
+      "GES": ["#38A169", "Gestión y Finanzas"],
+      "HUM": ["#805AD5", "Humanidades y Generales"],
+      "INV": ["#D69E2E", "Investigación"],
+      "TUT": ["#4A90E2", "Tutoría"],
+      "PRAC": ["#38B2AC", "Prácticas"]
+    };
+
+    const SOFT_PALETTE = [
+      "#E08E45", // Naranja suave
+      "#38A169", // Verde esmeralda suave
+      "#319795", // Celeste / Turquesa
+      "#805AD5", // Morado claro
+      "#4A90E2", // Azul suave
+      "#D69E2E", // Ámbar / Dorado suave
+      "#DD6B20", // Coral cálido
+      "#3182CE"  // Azul medio
+    ];
+
+    const STORAGE_KEY = "oapu_state_final";
+    const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+
+    const app = {
+      currentTab: 'tab-malla',
+      enrollMode: false,
+      onlyEligibleMode: false,
+      
+      state: {
+        config: { malla: defaultMalla, colores: defaultColors },
+        malla: { approved: [], enrolled: [] },
+        horario: { schedule: [], deadlines: [] },
+        notas: { evals: {}, notes: {} }
+      },
+      
+      history: {},
+      openNotes: new Set(),
+      
+      clone(obj) { return JSON.parse(JSON.stringify(obj)); },
+
+      softenColor(hex, catKey) {
+        if (catKey && defaultColors[catKey]) {
+          const oldDefaults = ["#1E40AF", "#2563EB", "#D97706", "#059669", "#7C3AED", "#DC2626", "#4B5563", "#64748B", "#0891B2", "#63B3ED", "#F4A261", "#52B788", "#B794F4", "#E76F51", "#E9C46A", "#4FD1C5"];
+          if (!hex || oldDefaults.includes(String(hex).toUpperCase())) {
+            return defaultColors[catKey][0];
+          }
+        }
+        let c = String(hex || '#319795').replace('#', '').trim();
+        if (c.length === 3) c = c.split('').map(x => x + x).join('');
+        const num = parseInt(c, 16);
+        if (isNaN(num)) return '#319795';
+
+        let r = ((num >> 16) & 255) / 255;
+        let g = ((num >> 8) & 255) / 255;
+        let b = (num & 255) / 255;
+
+        const max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h = 0, s = 0, l = (max + min) / 2;
+
+        if (max !== min) {
+          const d = max - min;
+          s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+          switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+          }
+          h /= 6;
+        }
+
+        s = Math.min(0.65, Math.max(0.42, s));
+        l = Math.min(0.58, Math.max(0.46, l));
+
+        const hue2rgb = (p, q, t) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1/6) return p + (q - p) * 6 * t;
+          if (t < 1/2) return q;
+          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+          return p;
+        };
+
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        const ro = Math.round(hue2rgb(p, q, h + 1/3) * 255);
+        const go = Math.round(hue2rgb(p, q, h) * 255);
+        const bo = Math.round(hue2rgb(p, q, h - 1/3) * 255);
+
+        return '#' + [ro, go, bo].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+      },
+
+      hexToRgba(hex, alpha = 0.16) {
+        let c = String(hex || '#22C55E').replace('#', '').trim();
+        if (c.length === 3) c = c.split('').map(x => x + x).join('');
+        const num = parseInt(c, 16);
+        if (isNaN(num)) return `rgba(34, 197, 94, ${alpha})`;
+        const r = (num >> 16) & 255;
+        const g = (num >> 8) & 255;
+        const b = num & 255;
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      },
+
+      init() {
+        this.populateModuleSelects();
+        let saved = null;
+        try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch (e) { console.error(e); }
+        this.loadState(saved);
+        
+        this.commit();
+        this.renderAll();
+        try { const t = localStorage.getItem('oapu_tab'); if (t) this.switchTab(t); } catch (e) {}
+        setTimeout(() => this.checkDeadlines(), 800);
+      },
+
+      populateModuleSelects() {
+        const sStart = document.getElementById('ev-mod-start');
+        const sEnd = document.getElementById('ev-mod-end');
+        if (!sStart || !sEnd) return;
+        const html = SCHEDULE_MODULES.map(m => `<option value="${m.mod}">Módulo ${m.mod} (${m.time})</option>`).join('');
+        sStart.innerHTML = html;
+        sEnd.innerHTML = html;
+      },
+
+      syncEndModule() {
+        const sStart = document.getElementById('ev-mod-start');
+        const sEnd = document.getElementById('ev-mod-end');
+        if (parseInt(sEnd.value, 10) < parseInt(sStart.value, 10)) {
+          sEnd.value = sStart.value;
+        }
+      },
+
+      timeToMins(tStr) {
+        if (!tStr || !tStr.includes(':')) return 420;
+        const [h, m] = tStr.split(':');
+        return parseInt(h, 10) * 60 + parseInt(m, 10);
+      },
+
+      normalizeScheduleItem(ev) {
+        if (!ev || typeof ev !== 'object') return null;
+        let modStart = parseInt(ev.modStart, 10);
+        let modEnd = parseInt(ev.modEnd, 10);
+
+        if (!modStart || !modEnd) {
+          const sM = this.timeToMins(ev.start || "07:00");
+          const eM = this.timeToMins(ev.end || "07:50");
+          modStart = 1;
+          modEnd = 1;
+          let bestDiff = 9999;
+          SCHEDULE_MODULES.forEach(m => {
+            const ms = this.timeToMins(m.start);
+            const me = this.timeToMins(m.end);
+            if (Math.abs(sM - ms) < bestDiff) {
+              bestDiff = Math.abs(sM - ms);
+              modStart = m.mod;
+            }
+            if (eM >= me - 10) {
+              modEnd = Math.max(modStart, m.mod);
+            }
+          });
+        }
+        modStart = Math.max(1, Math.min(17, modStart));
+        modEnd = Math.max(modStart, Math.min(17, modEnd));
+
+        return {
+          id: String(ev.id || Date.now() + Math.random()),
+          courseCode: String(ev.courseCode || ''),
+          codeSec: String(ev.codeSec || (ev.courseCode ? `${ev.courseCode} - 1` : 'CUR - 1')),
+          title: String(ev.title || 'CLASE').toUpperCase(),
+          room: String(ev.room || 'Sala S/N'),
+          status: ['inscrito', 'preinscrito', 'feriado', 'recuperacion'].includes(ev.status) ? ev.status : 'inscrito',
+          day: DAYS_LIST.includes(ev.day) ? ev.day : 'Lunes',
+          modStart,
+          modEnd,
+          color: String(ev.color || '#22C55E')
+        };
+      },
+
+      loadState(s) {
+        s = (s && typeof s === 'object') ? s : {};
+        const arr = v => Array.isArray(v) ? v : [];
+        const rawSched = arr(s.horario && s.horario.schedule);
+        this.state = {
+          config: this.normalizeConfig(s.config),
+          malla: { approved: arr(s.malla && s.malla.approved), enrolled: arr(s.malla && s.malla.enrolled) },
+          horario: {
+            schedule: rawSched.map(e => this.normalizeScheduleItem(e)).filter(Boolean),
+            deadlines: arr(s.horario && s.horario.deadlines)
+          },
+          notas: {
+            evals: (s.notas && s.notas.evals && typeof s.notas.evals === 'object') ? s.notas.evals : {},
+            notes: (s.notas && s.notas.notes && typeof s.notas.notes === 'object') ? s.notas.notes : {}
+          }
+        };
+      },
+
+      normalizeConfig(cfg) {
+        const def = () => ({ malla: this.clone(defaultMalla), colores: this.clone(defaultColors) });
+        if (!cfg || !cfg.malla || typeof cfg.malla !== 'object') return def();
+        const malla = {};
+        Object.keys(cfg.malla).forEach(sem => {
+          if (!Array.isArray(cfg.malla[sem])) return;
+          malla[sem] = cfg.malla[sem].filter(c => c && (c.code || c.name)).map((c, idx) => ({
+            name: String(c.name || c.code),
+            code: String(c.code || `CUR-${idx+1}`).trim().replace(/[^\w.\-]/g, ''),
+            credits: Number(c.credits) || 0,
+            cat: String(c.cat || 'ESP').trim().toUpperCase(),
+            req: Array.isArray(c.req) ? c.req.map(String) : (c.req ? String(c.req).split(/[,;\s]+/).filter(Boolean) : [])
+          }));
+        });
+        if (Object.keys(malla).length === 0) return def();
+
+        const codes = new Set();
+        Object.values(malla).forEach(l => l.forEach(c => codes.add(c.code)));
+        Object.values(malla).forEach(l => l.forEach(c => {
+          c.req = c.req.map(r => String(r).replace(/[^\w.\-]/g, '')).filter(r => codes.has(r) && r !== c.code);
+        }));
+
+        const colores = {};
+        if (cfg.colores && typeof cfg.colores === 'object') {
+          Object.keys(cfg.colores).forEach(k => {
+            const key = k.trim().toUpperCase();
+            const v = cfg.colores[k];
+            const rawHex = Array.isArray(v) ? String(v[0] || '#319795') : String(v || '#319795');
+            const label = Array.isArray(v) ? String(v[1] || key) : key;
+            colores[key] = [this.softenColor(rawHex, key), label];
+          });
+        }
+        Object.values(malla).forEach(l => l.forEach(c => {
+          if (!colores[c.cat]) {
+            const fallbackHex = defaultColors[c.cat]
+              ? defaultColors[c.cat][0]
+              : SOFT_PALETTE[Object.keys(colores).length % SOFT_PALETTE.length];
+            const fallbackLabel = defaultColors[c.cat] ? defaultColors[c.cat][1] : String(c.cat);
+            colores[c.cat] = [fallbackHex, fallbackLabel];
+          }
+        }));
+        return { malla, colores };
+      },
+
+      persist() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state)); return true; }
+        catch (e) { this.showToast("⚠️ No se pudo guardar en el navegador."); return false; }
+      },
+
+      saveLocal(skipHistory, noRender) {
+        if (!skipHistory) this.commit();
+        this.persist();
+        if (noRender) this.updateUndoUI(); else this.renderAll();
+      },
+
+      // ======== HISTORIAL ========
+      histMap: { 'tab-malla': 'malla', 'tab-horario': 'horario', 'tab-notas': 'notas' },
+      pushHistory() {},
+      commit() {
+        Object.keys(this.histMap).forEach(tab => {
+          const h = this.history[tab] || (this.history[tab] = { past: [], future: [] });
+          const snap = JSON.stringify(this.state[this.histMap[tab]]);
+          if (h.past[h.past.length - 1] !== snap) {
+            h.past.push(snap);
+            h.future = [];
+            if (h.past.length > 30) h.past.shift();
+          }
+        });
+      },
+      undo() {
+        const tab = this.currentTab, h = this.history[tab];
+        if (!h || h.past.length <= 1) return;
+        h.future.push(h.past.pop());
+        this.state[this.histMap[tab]] = JSON.parse(h.past[h.past.length - 1]);
+        this.saveLocal(true);
+      },
+      redo() {
+        const tab = this.currentTab, h = this.history[tab];
+        if (!h || h.future.length === 0) return;
+        const next = h.future.pop();
+        h.past.push(next);
+        this.state[this.histMap[tab]] = JSON.parse(next);
+        this.saveLocal(true);
+      },
+
+      updateUndoUI() {
+        ['malla', 'horario', 'notas'].forEach(id => {
+          const btnU = document.getElementById(`btn-undo-${id}`);
+          const btnR = document.getElementById(`btn-redo-${id}`);
+          if (btnU && btnR) {
+            const h = this.history[`tab-${id}`];
+            btnU.disabled = !h || h.past.length <= 1;
+            btnR.disabled = !h || h.future.length === 0;
+          }
+        });
+      },
+
+      switchTab(tabId) {
+        const target = document.getElementById(tabId);
+        if (!target) return;
+        this.currentTab = tabId;
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === tabId));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-tab') === tabId));
+        this.updateUndoUI();
+        try { localStorage.setItem('oapu_tab', tabId); } catch (e) {}
+        window.scrollTo(0, 0);
+      },
+
+      // ======== LÓGICA DE MALLA CURRICULAR ========
+      allCourses() { return [].concat(...Object.values(this.state.config.malla)); },
+
+      getCourse(code) {
+        for (const sem in this.state.config.malla) {
+          const f = this.state.config.malla[sem].find(c => c.code === code);
+          if (f) return f;
+        }
+        return null;
+      },
+
+      isLocked(course) {
+        if (!course.req || course.req.length === 0) return false;
+        return !course.req.every(r => this.state.malla.approved.includes(r));
+      },
+
+      toggleEnrollMode() {
+        this.enrollMode = !this.enrollMode;
+        const btn = document.getElementById("btn-enroll-mode");
+        if (this.enrollMode) {
+          btn.innerHTML = "✅ Modo Matrícula (Clic cursos)";
+          btn.classList.add("active");
+        } else {
+          btn.innerHTML = "✏️ Modo Matrícula";
+          btn.classList.remove("active");
+        }
+      },
+
+      toggleEligible() {
+        this.onlyEligibleMode = !this.onlyEligibleMode;
+        const btn = document.getElementById("btn-eligible-mode");
+        if (btn) btn.style.borderColor = this.onlyEligibleMode ? "var(--accent)" : "";
+        this.renderAll();
+      },
+
+      searchCourses() {
+        const q = this.norm(document.getElementById('malla-search').value);
+        document.querySelectorAll('.course-card').forEach(card => {
+          const txt = this.norm(card.dataset.code + " " + card.innerText);
+          if (txt.includes(q)) card.classList.remove('hidden-search');
+          else card.classList.add('hidden-search');
+        });
+      },
+
+      handleCourseClick(code) {
+        const course = this.getCourse(code);
+        if (!course) return;
+
+        if (this.enrollMode) {
+          if (this.state.malla.approved.includes(code)) return;
+          if (this.state.malla.enrolled.includes(code)) {
+            this.state.malla.enrolled = this.state.malla.enrolled.filter(c => c !== code);
+          } else {
+            if (this.isLocked(course)) {
+              this.showToast(`🔒 Faltan requisitos para matricular ${course.name}`);
+              return;
+            }
+            let creds = this.state.malla.enrolled.reduce((acc, c) => acc + (this.getCourse(c)?.credits || 0), 0);
+            if (creds + course.credits > 24) {
+              this.showToast("¡Excedes el límite de 24 créditos!");
+              return;
+            }
+            this.state.malla.enrolled.push(code);
+          }
+        } else {
+          if (this.state.malla.approved.includes(code)) {
+            this.state.malla.approved = this.state.malla.approved.filter(c => c !== code);
+          } else {
+            this.state.malla.approved.push(code);
+            this.state.malla.enrolled = this.state.malla.enrolled.filter(c => c !== code);
+          }
+        }
+        this.saveLocal();
+      },
+
+      // ======== HOVER DE ALTO BRILLO (SIN ATENUAR EL RESTO NI FLECHAS) ========
+      highlight(code) {
+        const cur = this.getCourse(code);
+        if (!cur) return;
+        const all = this.allCourses();
+
+        // Prerrequisitos directos (`req`)
+        const reqCodes = (cur.req || []).filter(r => this.getCourse(r));
+        // Cursos futuros directos que dependen del curso actual
+        const opensCourses = all.filter(c => (c.req || []).includes(code));
+
+        const highlightSet = new Set([code, ...reqCodes, ...opensCourses.map(c => c.code)]);
+
+        document.querySelectorAll('.course-card').forEach(card => {
+          const k = card.dataset.code;
+          if (highlightSet.has(k)) {
+            card.classList.add('hover-highlight');
+          } else {
+            card.classList.remove('hover-highlight');
+          }
+        });
+
+        const info = document.getElementById('hl-info');
+        if (info) {
+          if (!this._hl0) this._hl0 = info.innerHTML;
+          const nm = l => l.length ? l.map(x => `<b style="color:#fff">${esc(x.name)}</b>`).join(', ') : '<i>ninguno</i>';
+          info.innerHTML = `<b style="color:#fff">${esc(cur.name)} (${esc(cur.code)})</b> &nbsp;·&nbsp; <span style="color:var(--prereq)">Prerrequisitos:</span> ${nm(reqCodes.map(r => this.getCourse(r)))} &nbsp;·&nbsp; <span style="color:#4FD1C5">Habilita a:</span> ${nm(opensCourses)}`;
+        }
+      },
+
+      clearHighlight() {
+        document.querySelectorAll('.course-card').forEach(c => {
+          c.classList.remove('hover-highlight');
+        });
+        const info = document.getElementById('hl-info');
+        if (info && this._hl0) info.innerHTML = this._hl0;
+      },
+
+      // ======== EDICIÓN MANUAL DE CURSO ========
+      norm(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); },
+
+      editCourse(code) {
+        const c = this.getCourse(code);
+        if (!c) return;
+        this.editing = code;
+        document.getElementById('ce-name').value = c.name;
+        document.getElementById('ce-code').value = c.code;
+        document.getElementById('ce-cat').value = c.cat || 'ESP';
+        document.getElementById('ce-credits').value = c.credits;
+        document.getElementById('ce-req').innerHTML = this.allCourses()
+          .filter(x => x.code !== code)
+          .map(x => `<label class="ce-item"><input type="checkbox" value="${esc(x.code)}" ${(c.req || []).includes(x.code) ? 'checked' : ''}> <b>${esc(x.code)}</b> ${esc(x.name)}</label>`)
+          .join('');
+        this.openModal('course-modal');
+      },
+
+      filterCe(q) {
+        q = this.norm(q);
+        document.querySelectorAll('#ce-req .ce-item').forEach(l => {
+          l.style.display = this.norm(l.textContent).includes(q) ? '' : 'none';
+        });
+      },
+
+      renameCode(old, nw) {
+        this.getCourse(old).code = nw;
+        this.allCourses().forEach(x => { x.req = (x.req || []).map(r => r === old ? nw : r); });
+        ['approved', 'enrolled'].forEach(k => { this.state.malla[k] = this.state.malla[k].map(r => r === old ? nw : r); });
+        ['evals', 'notes'].forEach(k => {
+          const o = this.state.notas[k];
+          if (o[old] !== undefined) { o[nw] = o[old]; delete o[old]; }
+        });
+      },
+
+      saveCourse() {
+        const old = this.editing, c = this.getCourse(old);
+        if (!c) return;
+        const name = document.getElementById('ce-name').value.trim();
+        const code = document.getElementById('ce-code').value.trim().toUpperCase().replace(/[^\w.\-]/g, '');
+        const cat = (document.getElementById('ce-cat').value.trim().toUpperCase() || 'ESP');
+        if (!name || !code) { this.showToast('Completa nombre y código.'); return; }
+        if (code !== old && this.getCourse(code)) { this.showToast('Ya existe un curso con ese código.'); return; }
+
+        c.name = name;
+        c.cat = cat;
+        c.credits = parseInt(document.getElementById('ce-credits').value, 10) || 0;
+        c.req = Array.from(document.querySelectorAll('#ce-req input:checked')).map(i => i.value);
+
+        if (!this.state.config.colores[cat]) {
+          this.state.config.colores[cat] = [SOFT_PALETTE[Object.keys(this.state.config.colores).length % SOFT_PALETTE.length], cat];
+        }
+        if (code !== old) this.renameCode(old, code);
+
+        this.closeModal('course-modal');
+        this.saveLocal();
+      },
+
+      deleteCourse() {
+        const old = this.editing;
+        if (!old || !confirm('¿Eliminar este curso de la malla?')) return;
+        const m = this.state.config.malla;
+        Object.keys(m).forEach(k => {
+          m[k] = m[k].filter(x => x.code !== old);
+          if (!m[k].length) delete m[k];
+        });
+        this.allCourses().forEach(x => { x.req = (x.req || []).filter(r => r !== old); });
+        ['approved', 'enrolled'].forEach(k => { this.state.malla[k] = this.state.malla[k].filter(r => r !== old); });
+
+        this.closeModal('course-modal');
+        this.saveLocal();
+      },
+
+      // ======== HORARIO POR MÓDULOS Y DEADLINES ========
+      openModal(id) {
+        document.getElementById(id).style.display = 'flex';
+      },
+      closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+      },
+
+      openScheduleModal(defaultDay = null, defaultMod = null) {
+        const select = document.getElementById('ev-course-select');
+        const enrolledCodes = this.state.malla.enrolled;
+        const all = this.allCourses();
+
+        let html = `<option value="Otro">-- Escribir curso o evento manualmente --</option>`;
+        if (enrolledCodes.length > 0) {
+          html += `<optgroup label="📌 Cursos Matriculados (En Curso)">`;
+          enrolledCodes.forEach(code => {
+            const c = this.getCourse(code);
+            if (c) html += `<option value="${esc(c.code)}">[${esc(c.code)}] ${esc(c.name)}</option>`;
+          });
+          html += `</optgroup>`;
+        }
+        html += `<optgroup label="📚 Todos los Cursos de la Malla">`;
+        all.forEach(c => {
+          if (!enrolledCodes.includes(c.code)) {
+            html += `<option value="${esc(c.code)}">[${esc(c.code)}] ${esc(c.name)}</option>`;
+          }
+        });
+        html += `</optgroup>`;
+
+        select.innerHTML = html;
+
+        if (enrolledCodes.length > 0 && this.getCourse(enrolledCodes[0])) {
+          select.value = enrolledCodes[0];
+          this.handleCourseSelectChange(select);
+        } else {
+          select.value = 'Otro';
+          document.getElementById('ev-code-sec').value = '';
+          document.getElementById('ev-title').value = '';
+        }
+
+        document.getElementById('ev-room').value = 'Sala F306';
+        document.getElementById('ev-status').value = 'inscrito';
+
+        document.querySelectorAll('.day-chk').forEach(chk => {
+          chk.checked = (defaultDay && chk.value === defaultDay);
+        });
+
+        const sStart = document.getElementById('ev-mod-start');
+        const sEnd = document.getElementById('ev-mod-end');
+        if (defaultMod) {
+          sStart.value = String(defaultMod);
+          sEnd.value = String(Math.min(17, defaultMod + 1));
+        } else {
+          sStart.value = "1";
+          sEnd.value = "2";
+        }
+
+        this.openModal('event-modal');
+      },
+
+      handleCourseSelectChange(selectElem) {
+        const codeInput = document.getElementById('ev-code-sec');
+        const titleInput = document.getElementById('ev-title');
+        if (selectElem.value === 'Otro') {
+          codeInput.value = '';
+          titleInput.value = '';
+          titleInput.focus();
+        } else {
+          const c = this.getCourse(selectElem.value);
+          if (c) {
+            codeInput.value = `${c.code} - 1`;
+            titleInput.value = c.name.toUpperCase();
+          }
+        }
+      },
+
+      getStatusColor(status, courseCode) {
+        if (status === 'preinscrito') return '#F59E0B';
+        if (status === 'feriado') return '#EC4899';
+        if (status === 'recuperacion') return '#38B2AC';
+        if (courseCode) {
+          const c = this.getCourse(courseCode);
+          if (c && this.state.config.colores[c.cat]) {
+            return this.softenColor(this.state.config.colores[c.cat][0], c.cat);
+          }
+        }
+        return '#22C55E';
+      },
+
+      saveEvent() {
+        const courseSel = document.getElementById('ev-course-select').value;
+        const courseCode = courseSel !== 'Otro' ? courseSel : '';
+        const codeSec = document.getElementById('ev-code-sec').value.trim() || (courseCode ? `${courseCode} - 1` : 'CUR - 1');
+        const room = document.getElementById('ev-room').value.trim() || 'Sala S/N';
+        const title = document.getElementById('ev-title').value.trim().toUpperCase();
+        const status = document.getElementById('ev-status').value;
+        const modStart = parseInt(document.getElementById('ev-mod-start').value, 10);
+        const modEnd = parseInt(document.getElementById('ev-mod-end').value, 10);
+
+        const checks = document.querySelectorAll('.day-chk:checked');
+        if (!title || checks.length === 0) {
+          this.showToast("⚠️ Completa el nombre del curso y selecciona al menos un día.");
+          return;
+        }
+        if (modEnd < modStart) {
+          this.showToast("⚠️ El módulo de fin debe ser mayor o igual al módulo de inicio.");
+          return;
+        }
+
+        const color = this.getStatusColor(status, courseCode);
+        let conflictDetected = false;
+
+        checks.forEach(chk => {
+          const day = chk.value;
+          const hasOverlap = this.state.horario.schedule.some(ev =>
+            ev.day === day && !(modEnd < ev.modStart || modStart > ev.modEnd)
+          );
+          if (hasOverlap) conflictDetected = true;
+
+          const eid = Date.now().toString() + Math.floor(Math.random() * 10000).toString();
+          this.state.horario.schedule.push({
+            id: eid,
+            courseCode,
+            codeSec,
+            title,
+            room,
+            status,
+            day,
+            modStart,
+            modEnd,
+            color
+          });
+        });
+
+        if (conflictDetected) {
+          this.showToast("🚫 Atención: Se detectó un cruce de horario en los módulos seleccionados.");
+        } else {
+          this.showToast("✅ Bloque agregado al horario.");
+        }
+
+        this.closeModal('event-modal');
+        this.saveLocal();
+      },
+      
+      deleteEvent(id) {
+        this.state.horario.schedule = this.state.horario.schedule.filter(e => e.id !== id);
+        this.saveLocal();
+      },
+
+      showUnscheduledInfo() {
+        const scheduledCodes = new Set(this.state.horario.schedule.map(e => e.courseCode).filter(Boolean));
+        const missing = this.state.malla.enrolled
+          .filter(code => !scheduledCodes.has(code))
+          .map(code => this.getCourse(code))
+          .filter(Boolean);
+
+        if (missing.length === 0) {
+          this.showToast("✅ Todos tus cursos matriculados tienen horario asignado.");
+        } else {
+          this.showToast("⏰ Cursos matriculados sin horario: " + missing.map(c => c.name).join(", "));
+        }
+      },
+      
+      saveDeadline() {
+        const title = document.getElementById('dl-title').value.trim();
+        const type = document.getElementById('dl-type').value;
+        const date = document.getElementById('dl-date').value;
+        const time = document.getElementById('dl-time').value || "23:59";
+        if (!title || !date) { this.showToast("Completa título y fecha."); return; }
+        this.state.horario.deadlines.push({ id: Date.now().toString(), title, type, date, time });
+        this.closeModal('deadline-modal');
+        document.getElementById('dl-title').value = '';
+        this.saveLocal();
+        this.askNotif();
+        this.checkDeadlines();
+      },
+      
+      deleteDeadline(id) {
+        this.state.horario.deadlines = this.state.horario.deadlines.filter(e => e.id !== id);
+        this.saveLocal();
+      },
+      
+      checkDeadlines() {
+        const now = new Date();
+        this.state.horario.deadlines.forEach(dl => {
+          const dlDate = new Date(`${dl.date}T${dl.time}`);
+          const diffHours = (dlDate - now) / (1000 * 60 * 60);
+          if (diffHours > 0 && diffHours <= 48) {
+            const notifKey = `notif_${dl.id}_${now.toDateString()}`;
+            if (!localStorage.getItem(notifKey)) {
+              if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                new Notification(`OAPU: ¡Faltan menos de 2 días!`, { body: `${dl.type}: ${dl.title}\nVence: ${dl.date} ${dl.time}` });
+                localStorage.setItem(notifKey, "true");
+              } else {
+                this.showToast(`🚨 URGENTE: ${dl.title} vence pronto.`);
+              }
+            }
+          }
+        });
+      },
+
+      // ======== NOTAS ========
+      addEval(code) {
+        if (!this.state.notas.evals[code]) this.state.notas.evals[code] = [];
+        this.state.notas.evals[code].push({ id: Date.now().toString(), name: "PC", weight: 0, grade: 0 });
+        this.saveLocal();
+      },
+      updateEval(code, id, field, val, done) {
+        const ev = (this.state.notas.evals[code] || []).find(e => e.id === id);
+        if (!ev) return;
+        ev[field] = (field === 'name') ? val : (parseFloat(val) || 0);
+        this.persist();
+        this.refreshCourse(code);
+        if (done) { this.commit(); this.updateUndoUI(); }
+      },
+      removeEval(code, id) {
+        this.state.notas.evals[code] = this.state.notas.evals[code].filter(e => e.id !== id);
+        this.saveLocal();
+      },
+      applyTemplate(code, type) {
+        if (type === 'estandar') {
+          this.state.notas.evals[code] = [
+            { id: Date.now().toString()+1, name: "PC1", weight: 15, grade: 0 },
+            { id: Date.now().toString()+2, name: "PC2", weight: 15, grade: 0 },
+            { id: Date.now().toString()+3, name: "Parcial", weight: 30, grade: 0 },
+            { id: Date.now().toString()+4, name: "Final", weight: 40, grade: 0 }
+          ];
+        } else if (type === 'proyectos') {
+          this.state.notas.evals[code] = [
+            { id: Date.now().toString()+1, name: "Avance 1", weight: 20, grade: 0 },
+            { id: Date.now().toString()+2, name: "Avance 2", weight: 20, grade: 0 },
+            { id: Date.now().toString()+3, name: "Exp. Final", weight: 60, grade: 0 }
+          ];
+        }
+        this.saveLocal();
+      },
+      toggleNotes(code) {
+        const p = document.getElementById(`notes-panel-${code}`);
+        if (!p) return;
+        p.classList.toggle('active');
+        if (p.classList.contains('active')) this.openNotes.add(code);
+        else this.openNotes.delete(code);
+      },
+      saveNoteText(code, text, done) {
+        this.state.notas.notes[code] = text;
+        this.persist();
+        if (done) { this.commit(); this.updateUndoUI(); }
+      },
+
+      // ======== CARGAR MALLA JSON Y BACKUP ========
+      loadCustomJSON() {
+        let txt = document.getElementById('json-editor').value.trim();
+        if (!txt) { this.showToast("Pega primero el código JSON."); return; }
+        txt = txt.replace(/^```(?:json)?/i, '').replace(/```\s*$/, '').trim();
+        const a = txt.indexOf('{'), b = txt.lastIndexOf('}');
+        if (a >= 0 && b > a) txt = txt.slice(a, b + 1);
+        let parsed;
+        try { parsed = JSON.parse(txt); }
+        catch (e) { this.showToast("JSON inválido: revisa que esté completo (llaves y comillas)."); return; }
+
+        if (parsed.config) parsed = parsed.config;
+        if (!parsed.malla) parsed = { malla: parsed };
+        const cfg = this.normalizeConfig(parsed);
+        const total = Object.values(cfg.malla).reduce((acc, l) => acc + l.length, 0);
+        if (!total) { this.showToast("El JSON no contiene cursos válidos."); return; }
+        if ((this.state.malla.approved.length || this.state.malla.enrolled.length) &&
+            !confirm("Esto reemplaza tu malla actual y reinicia tu avance (aprobados y matriculados). ¿Continuar?")) {
+          return;
+        }
+        this.state.config = cfg;
+        this.state.malla.approved = [];
+        this.state.malla.enrolled = [];
+        this.saveLocal();
+        this.switchTab('tab-malla');
+        this.showToast(`✅ Malla aplicada: ${total} cursos en ${Object.keys(cfg.malla).length} ciclos.`);
+      },
+
+      copyText(text, okMsg) {
+        const fallback = () => {
+          const t = document.createElement('textarea');
+          t.value = text;
+          t.style.position = 'fixed';
+          t.style.opacity = '0';
+          document.body.appendChild(t);
+          t.select();
+          try { document.execCommand('copy'); this.showToast(okMsg); }
+          catch (e) { this.showToast("Selecciona el texto y cópialo manualmente."); }
+          t.remove();
+        };
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(() => this.showToast(okMsg)).catch(fallback);
+        } else fallback();
+      },
+      copyPrompt() { this.copyText(document.getElementById('ia-prompt').value, "📋 Prompt copiado. Pégalo en tu IA junto con tu malla."); },
+      copyCurrentJSON() { this.copyText(JSON.stringify(this.state.config, null, 2), "📋 Tu malla actual (JSON) fue copiada."); },
+      resetToDefaultJSON() {
+        this.state.config.malla = this.clone(defaultMalla);
+        this.state.config.colores = this.clone(defaultColors);
+        this.saveLocal();
+        this.showToast("Malla de ejemplo cargada.");
+        this.switchTab('tab-malla');
+      },
+      hardReset() {
+        if (confirm("Borrarás TODAS tus notas, horario y avance. ¿Seguro?")) {
+          localStorage.removeItem(STORAGE_KEY);
+          location.reload();
+        }
+      },
+      exportBackup() {
+        const blob = new Blob([JSON.stringify(this.state, null, 2)], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "OAPU_Respaldo.json";
+        a.click();
+      },
+      importBackup(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            this.loadState(JSON.parse(event.target.result));
+            this.saveLocal();
+            this.showToast("¡Backup cargado exitosamente!");
+          } catch (err) {
+            this.showToast("Error al leer el archivo.");
+          }
+        };
+        reader.readAsText(file);
+      },
+
+      showToast(msg) {
+        const c = document.getElementById('toast-container');
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.innerText = msg;
+        c.appendChild(t);
+        setTimeout(() => {
+          t.style.opacity = '0';
+          setTimeout(() => t.remove(), 300);
+        }, 4200);
+      },
+
+      // ======== RENDERIZADO GENERAL ========
+      renderMallaHorario() {
+        this.updateUndoUI();
+
+        // 1. RENDER LEYENDA DE CATEGORÍAS DEL JSON
+        const catLegend = document.getElementById('cat-legend');
+        if (catLegend) {
+          const coloresObj = this.state.config.colores || {};
+          const keys = Object.keys(coloresObj);
+          if (keys.length > 0) {
+            catLegend.style.display = 'flex';
+            catLegend.innerHTML = `<span class="cat-legend-title">Categorías:</span>` +
+              keys.map(catKey => {
+                const [rawHex, label] = coloresObj[catKey];
+                const softHex = this.softenColor(rawHex, catKey);
+                return `<span class="cat-legend-chip">
+                  <span class="cat-legend-dot" style="background:${esc(softHex)};"></span>
+                  <span>${esc(label)}</span>
+                  <span class="cat-legend-code">(${esc(catKey)})</span>
+                </span>`;
+              }).join('');
+          } else {
+            catLegend.style.display = 'none';
+          }
+        }
+
+        // 2. RENDER MALLA CURRICULAR
+        const grid = document.getElementById('grid-malla');
+        grid.innerHTML = '';
+        if (Object.keys(this.state.config.malla).length === 0) {
+          grid.innerHTML = `<div class="onboard">
+            <h2>👋 Configura tu malla curricular</h2>
+            <p>Usa la pestaña Cargar Malla para importar tu plan de estudios mediante código JSON con IA o carga el ejemplo de Ingeniería Industrial.</p>
+            <div class="onboard-btns">
+              <button class="btn btn-accent" onclick="app.switchTab('tab-config')">🤖 Ir a Cargar Malla</button>
+              <button class="btn" onclick="app.resetToDefaultJSON()">Ver ejemplo (UARM)</button>
+            </div>
+          </div>`;
+        }
+
+        let appCount = 0, enrCredits = 0, totalCr = 0;
+
+        Object.keys(this.state.config.malla).forEach(sem => {
+          const col = document.createElement('div');
+          col.className = 'semester-col';
+          const totalSemCr = this.state.config.malla[sem].reduce((acc, c) => acc + c.credits, 0);
+          col.innerHTML = `<div class="semester-header">${esc(sem)}<div class="credits">${totalSemCr} CR Totales</div></div>`;
+
+          this.state.config.malla[sem].forEach(c => {
+            totalCr += c.credits;
+            const isAppr = this.state.malla.approved.includes(c.code);
+            const isEnr = this.state.malla.enrolled.includes(c.code);
+            const locked = this.isLocked(c);
+
+            if (isAppr) appCount += c.credits;
+            if (isEnr) enrCredits += c.credits;
+
+            let stateClass = 'state-enabled';
+            if (isAppr) {
+              stateClass = 'state-approved';
+            } else if (locked) {
+              stateClass = 'state-locked';
+            }
+
+            const catEntry = this.state.config.colores[c.cat] || ['#319795', c.cat];
+            const softHex = this.softenColor(catEntry[0], c.cat);
+
+            const card = document.createElement('div');
+            card.className = `course-card ${stateClass} ${isEnr ? 'enrolled' : ''}`;
+            if (this.onlyEligibleMode && !isAppr && locked) card.classList.add('filter-locked-hide');
+
+            card.id = `card-${c.code}`;
+            card.dataset.code = c.code;
+            card.style.setProperty('--cat-soft', softHex);
+
+            const topRightStatus = isAppr
+              ? `<span class="chk-badge" title="Curso Aprobado"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></span>`
+              : (isEnr ? `<span class="enr-badge">EN CURSO</span>` : '');
+
+            card.innerHTML = `
+              <div class="course-top">
+                <span class="course-code">${esc(c.code)}</span>
+                <span class="top-r">
+                  ${topRightStatus}
+                  <button class="card-edit" title="Editar curso y prerrequisitos" onclick="event.stopPropagation(); app.editCourse('${esc(c.code)}')">✎</button>
+                </span>
+              </div>
+              <div class="course-body">${esc(c.name)}</div>
+              <div class="course-bottom">
+                <span class="req-badge" title="Cantidad de prerrequisitos">${c.req.length} req</span>
+                <span class="cr-badge">${c.credits} CR</span>
+              </div>
+            `;
+
+            card.onclick = () => this.handleCourseClick(c.code);
+            card.onmouseenter = () => this.highlight(c.code);
+            card.onmouseleave = () => this.clearHighlight();
+            col.appendChild(card);
+          });
+          grid.appendChild(col);
+        });
+
+        document.getElementById('stat-appr').innerText = this.state.malla.approved.length;
+        document.getElementById('stat-enr').innerText = enrCredits;
+
+        const pct = totalCr > 0 ? Math.round((appCount / totalCr) * 100) : 0;
+        document.getElementById('pb-pct').innerText = `${pct}%`;
+        document.getElementById('pb-fill').style.width = `${pct}%`;
+        document.getElementById('pb-text').innerText = `${appCount} / ${totalCr} CR`;
+
+        // 3. RENDER TABLA DE HORARIO DE 17 MÓDULOS
+        this.renderScheduleTable();
+
+        // 4. RENDER DEADLINES
+        const dlContainer = document.getElementById('dl-container');
+        dlContainer.innerHTML = '';
+        if (this.state.horario.deadlines.length === 0) {
+          dlContainer.innerHTML = '<p style="color:var(--text-muted); font-size:0.85rem; grid-column:1/-1; text-align:center; padding: 1rem 0;">No hay exámenes ni entregas pendientes.</p>';
+        } else {
+          const now = new Date();
+          const sortedDl = [...this.state.horario.deadlines].sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+          sortedDl.forEach(dl => {
+            const dlDate = new Date(`${dl.date}T${dl.time}`);
+            const diffDays = (dlDate - now) / (1000 * 60 * 60 * 24);
+            const isUrgent = diffDays > 0 && diffDays <= 2;
+            const isPast = diffDays < 0;
+
+            if (!isPast) {
+              dlContainer.innerHTML += `
+                <div class="dl-card ${isUrgent ? 'urgent' : ''}">
+                  <button class="event-delete" onclick="app.deleteDeadline('${dl.id}')" title="Completar / Quitar">✓</button>
+                  <h4>${esc(dl.title)}</h4>
+                  <div class="date">📅 ${dl.date} &nbsp;⏰ ${dl.time}</div>
+                  <span class="type">${esc(dl.type)}</span>
+                </div>`;
+            }
+          });
+        }
+      },
+
+      renderScheduleTable() {
+        const tbody = document.getElementById('schedule-tbody');
+        if (!tbody) return;
+
+        const sched = this.state.horario.schedule;
+        let conflictSlotsCount = 0;
+
+        const cntInscrito = sched.filter(e => e.status === 'inscrito').length;
+        const cntPreinscrito = sched.filter(e => e.status === 'preinscrito').length;
+        const cntFeriado = sched.filter(e => e.status === 'feriado').length;
+        const cntRecuperacion = sched.filter(e => e.status === 'recuperacion').length;
+
+        const scheduledCourseCodes = new Set(sched.map(e => e.courseCode).filter(Boolean));
+        const cntSinHorario = this.state.malla.enrolled.filter(code => !scheduledCourseCodes.has(code)).length;
+
+        let rowsHtml = '';
+
+        SCHEDULE_MODULES.forEach(mObj => {
+          const modNum = mObj.mod;
+          rowsHtml += `<tr>
+            <td class="td-mod"><span class="mod-pill">M${modNum}</span></td>
+            <td class="td-time">${mObj.time}</td>`;
+
+          DAYS_LIST.forEach(day => {
+            const cellEvents = sched.filter(ev => ev.day === day && modNum >= ev.modStart && modNum <= ev.modEnd);
+            const isConflict = cellEvents.length > 1;
+            if (isConflict) conflictSlotsCount++;
+
+            if (cellEvents.length === 0) {
+              rowsHtml += `<td class="td-slot" onclick="app.openScheduleModal('${day}', ${modNum})" title="Clic para agregar clase el ${day} en Módulo ${modNum} (${mObj.time})">
+                <div class="td-slot-empty-hint">+</div>
+              </td>`;
+            } else {
+              const blocksHtml = cellEvents.map(ev => {
+                const cHex = ev.color || this.getStatusColor(ev.status, ev.courseCode);
+                const bgRgba = this.hexToRgba(cHex, 0.22);
+                const borderRgba = this.hexToRgba(cHex, 0.48);
+
+                return `<div class="class-block ${isConflict ? 'is-conflict' : ''}"
+                             style="--blk-color:${esc(cHex)}; --blk-bg:${bgRgba}; --blk-border:${borderRgba};"
+                             onclick="event.stopPropagation();">
+                  <button class="cb-delete" title="Eliminar bloque" onclick="event.stopPropagation(); app.deleteEvent('${esc(ev.id)}')">×</button>
+                  <div class="cb-line1">${esc(ev.codeSec)}</div>
+                  <div class="cb-line2">${esc(ev.title)}</div>
+                  <div class="cb-line3">
+                    <span>${esc(ev.room)}</span>
+                    ${isConflict ? '<span class="cb-conflict-tag">🚫 CRUCE</span>' : ''}
+                  </div>
+                </div>`;
+              }).join('');
+
+              rowsHtml += `<td class="td-slot" onclick="app.openScheduleModal('${day}', ${modNum})">
+                <div class="slot-events-wrap">${blocksHtml}</div>
+              </td>`;
+            }
+          });
+
+          rowsHtml += `</tr>`;
+        });
+
+        tbody.innerHTML = rowsHtml;
+
+        document.getElementById('cnt-inscrito').innerText = cntInscrito;
+        document.getElementById('cnt-preinscrito').innerText = cntPreinscrito;
+        document.getElementById('cnt-sinhorario').innerText = cntSinHorario;
+        document.getElementById('cnt-cruce').innerText = conflictSlotsCount;
+        document.getElementById('cnt-feriado').innerText = cntFeriado;
+        document.getElementById('cnt-recuperacion').innerText = cntRecuperacion;
+
+        const cardCruce = document.getElementById('card-cruce');
+        if (cardCruce) {
+          cardCruce.classList.toggle('has-conflict', conflictSlotsCount > 0);
+        }
+      },
+
+      renderAll() {
+        try { this.renderMallaHorario(); } catch (e) { console.error('Malla/Horario:', e); }
+        try { this.renderNotas(); } catch (e) { console.error('Notas:', e); }
+      },
+
+      askNotif() {
+        try {
+          if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+            Notification.requestPermission();
+          }
+        } catch (e) {}
+      },
+
+      calcCourse(code) {
+        const evals = this.state.notas.evals[code] || [];
+        let sw = 0, sg = 0;
+        evals.forEach(e => {
+          sw += Number(e.weight) || 0;
+          sg += (Number(e.grade) || 0) * ((Number(e.weight) || 0) / 100);
+        });
+        return { sw: Math.round(sw * 100) / 100, sg };
+      },
+
+      summaryHtml(code) {
+        const { sw, sg } = this.calcCourse(code);
+        let meta = '', cls = 'ok', warn = '';
+        if (sw > 0 && sw < 100) {
+          const left = Math.round((100 - sw) * 100) / 100;
+          const need = Math.max(0, (10.5 - sg) / (left / 100));
+          meta = need > 20
+            ? `<div class="meta-text" style="color:var(--danger); border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.1);">💀 Necesitas ${need.toFixed(1)} en el ${left}% restante (Imposible).</div>`
+            : `<div class="meta-text">🎯 Meta: Necesitas un <b>${need.toFixed(1)}</b> en el ${left}% restante para aprobar (11).</div>`;
+        }
+        if (sw > 100) { warn = `<span class="warning">⚠️ Tus pesos superan el 100%</span>`; cls = 'warn'; }
+        return `${meta}<div class="cgc-footer"><div class="summary-flex">
+          <span class="summary-text">Promedio Final: <span>${sg.toFixed(2)}</span></span>
+          <div style="text-align:right;"><span class="sum-weight ${cls}">${sw}%</span>${warn}</div></div></div>`;
+      },
+
+      updatePPA() {
+        let sum = 0, cr = 0;
+        this.state.malla.enrolled.forEach(code => {
+          const c = this.getCourse(code);
+          if (!c) return;
+          const { sw, sg } = this.calcCourse(code);
+          if (sw === 100) { sum += sg * c.credits; cr += c.credits; }
+        });
+        document.getElementById('stat-ppa').innerText = cr > 0 ? (sum / cr).toFixed(2) : "--";
+      },
+
+      refreshCourse(code) {
+        const el = document.getElementById(`sum-${code}`);
+        if (el) el.innerHTML = this.summaryHtml(code);
+        this.updatePPA();
+      },
+
+      renderNotas() {
+        const g = document.getElementById('grades-container');
+        g.innerHTML = '';
+        const enr = this.state.malla.enrolled.filter(c => this.getCourse(c));
+        if (enr.length === 0) {
+          g.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 3rem; background:var(--card-bg); border-radius:12px; border:1px dashed #334155;">
+            <p style="color:var(--text-muted);">No tienes cursos matriculados.<br>Ve a la pestaña <b>Malla Curricular</b>, activa el "Modo Matrícula" y selecciona los cursos que estás llevando.</p>
+          </div>`;
+          document.getElementById('stat-ppa').innerText = "--";
+          return;
+        }
+        enr.forEach(code => {
+          const course = this.getCourse(code);
+          const k = esc(code);
+          const rows = (this.state.notas.evals[code] || []).map(e => `
+            <div class="eval-row">
+              <input type="text" class="eval-input" value="${esc(e.name)}" placeholder="Nombre (Ej. PC1)"
+                oninput="app.updateEval('${k}','${e.id}','name',this.value,false)" onchange="app.updateEval('${k}','${e.id}','name',this.value,true)">
+              <input type="number" class="eval-input" value="${Number(e.weight) || 0}" min="0" max="100" placeholder="%"
+                oninput="app.updateEval('${k}','${e.id}','weight',this.value,false)" onchange="app.updateEval('${k}','${e.id}','weight',this.value,true)">
+              <input type="number" class="eval-input" value="${Number(e.grade) || 0}" min="0" max="20" step="0.1" placeholder="Nota"
+                oninput="app.updateEval('${k}','${e.id}','grade',this.value,false)" onchange="app.updateEval('${k}','${e.id}','grade',this.value,true)">
+              <button class="btn-del-eval" onclick="app.removeEval('${k}','${e.id}')" title="Eliminar fila">×</button>
+            </div>`).join('');
+          const open = this.openNotes.has(code) ? ' active' : '';
+          g.insertAdjacentHTML('beforeend', `
+            <div class="course-grade-card">
+              <div class="cgc-header">
+                <h3>${esc(course.name)}</h3>
+                <div style="display:flex; gap:0.5rem;">
+                  <button class="btn-icon-add" style="background:#334155; color:#fff;" title="Apuntes" onclick="app.toggleNotes('${k}')">📝</button>
+                  <button class="btn-icon-add" onclick="app.addEval('${k}')">+ Añadir</button>
+                </div>
+              </div>
+              <div class="notes-panel${open}" id="notes-panel-${k}">
+                <textarea class="notes-ta" placeholder="Pega links, temarios, etc."
+                  oninput="app.saveNoteText('${k}', this.value, false)" onchange="app.saveNoteText('${k}', this.value, true)">${esc(this.state.notas.notes[code] || '')}</textarea>
+              </div>
+              <div class="cgc-body">
+                <div class="template-btns">
+                  <button class="tpl-btn" onclick="app.applyTemplate('${k}', 'estandar')">Estándar</button>
+                  <button class="tpl-btn" onclick="app.applyTemplate('${k}', 'proyectos')">Proyectos</button>
+                </div>
+                <div class="eval-row-header"><span>Evaluación</span><span>Peso(%)</span><span>Nota</span><span></span></div>
+                ${rows}
+                <div id="sum-${k}">${this.summaryHtml(code)}</div>
+              </div>
+            </div>`);
+        });
+        this.updatePPA();
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+      try { app.init(); } catch (e) { console.error(e); }
+    });
+  </script>
+</body>
+</html>
